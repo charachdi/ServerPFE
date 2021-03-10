@@ -5,6 +5,7 @@ const app = express()
 const Port = process.env.PORT || 3001
 const db = require('./models')
 const dotenv = require("dotenv");
+app.use(express.static('uploads/'));
 
 
 // midellware

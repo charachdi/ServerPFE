@@ -4,8 +4,12 @@ const db = require("../models");
 const bycrpt = require("bcryptjs");
 const Jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require('uuid');
+const upload =  require('./../store/userprofile') 
+const authentification = require('./../midellware/authentification')
 
 
+
+Router.use(authentification)
 //get all users
 Router.get('/', async(req,res)=>{
  const users = await db.User.findAll()
@@ -76,33 +80,41 @@ Router.post('/',async (req,res)=>{
 })
 
 
+
+Router.put('/update/test/',upload.single("myImage"), (req, res)=>{
+  
+  
+  console.log(req.userData)
+  res.send("ok")
+})
+
+
 //update user
-Router.put('update/profile/:id', async (req,res)=>{
+Router.put('/update/profile',upload.single("myImage"), async (req,res)=>{
 
 
-    const { full_name } = req.body
-    const { user_name } = req.body
-    const { user_sex } = req.body
+    const { nom } = req.body
+    const { prenom } = req.body
     const { address } = req.body
-    const { country } = req.body
+    // const { country } = req.body
     const { tel } = req.body
     const { fax } = req.body
     const { Website } = req.body
- 
+    const url =`http://${req.hostname}:${process.env.PORT || 3001}/userimg/${req.file.filename}`
 
-    const user = await db.User.findOne({ where : {user_email : email}})
+    const user = await db.User.findOne({ where : {id : req.userData.userId}})
     if(!user) res.status(201).json({
       message : 'user not found'
     })
 
-    user.full_name = full_name
-    user.user_name = user_name
-    user.user_sex = user_sex
+    user.full_name = nom+" "+prenom
     user.address = address
-    user.country = country
+    // user.country = country
     user.tel = tel
     user.fax = fax
     user.Website = Website
+    user.user_img = url
+    user.ftime = "false"
 
 
    await user.save()
@@ -150,6 +162,46 @@ Router.put('/auth/:id', async (req,res)=>{
   })
 })
 
+
+
+
+//admin update 
+//update user
+Router.put('/update/profile/admin/:id', async (req,res)=>{
+
+
+  const { full_name } = req.body
+  const { email } = req.body
+  const { pwd } = req.body
+  const { level } = req.body
+  
+
+  
+
+
+  const user = await db.User.findOne({ where : {id : req.params.id}})
+  if(!user) res.status(201).json({
+    message : 'user not found'
+  })
+  if(pwd != ""){
+    //Hash password
+    const salt = await bycrpt.genSalt(10);
+    const hashpassword = await bycrpt.hash(pwd,salt);
+    user.pwd = hashpassword
+  }
+  user.full_name = full_name
+  user.user_level = level
+  user.user_email = email
+
+ await user.save()
+ .then((user)=>{
+  res.status(200).json({
+    message :' user updated',
+    user
+  })
+ })
+
+})
 
 //delete user
 Router.delete('/user/:id', async (req,res)=>{

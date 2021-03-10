@@ -14,6 +14,11 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: true,
       },
+      ftime: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        defaultValue: "true",
+      },
       pwd: {
         type: DataTypes.STRING,
         allowNull: false,

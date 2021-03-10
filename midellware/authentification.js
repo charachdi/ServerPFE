@@ -12,8 +12,8 @@ module.exports = (req,res,next)=>{
     const decodedToken = jwt.verify(token,process.env.SECRET_CODE);
    
     req.userData={
-        userId:decodedToken._id,
-        userRole:decodedToken.role,
+        userId:decodedToken.id,
+        userRole:decodedToken.user_level,
       };
     next();
     
