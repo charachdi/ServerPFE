@@ -6,13 +6,14 @@ const Jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require('uuid');
 const upload =  require('./../store/userprofile') 
 const authentification = require('./../midellware/authentification')
-
+const Mailer =  require('./../midellware/Mailer')
 
 
 Router.use(authentification)
 //get all users
 Router.get('/', async(req,res)=>{
- const users = await db.User.findAll()
+ const users = await db.User.findAll({ include: db.Equipe })
+ console.log(users)
  res.send(users)
 
 
@@ -41,6 +42,7 @@ Router.post('/',async (req,res)=>{
         const {email} = req.body
         const {pwd} = req.body
         const {level} = req.body
+        const { equipe_id } = req.body
 
       //check if user exists
       const emailexist = await db.User.findOne({ where: {user_email : email}});
@@ -58,7 +60,11 @@ Router.post('/',async (req,res)=>{
          user_email : email,
          pwd : hashpassword,
          user_level:level,
-         activation_code : uuidv4()
+        //  activation_code : uuidv4()
+         }
+
+         if(equipe_id !== ""){
+          NewUser.EquipeId = equipe_id
          }
 
        // saving the new user
@@ -66,6 +72,7 @@ Router.post('/',async (req,res)=>{
 
       const newuser =   await  db.User.create(NewUser)
       .then((user)=>{
+        // Mailer()
         res.status(200).json({
           message : "user added",
           user,
@@ -96,10 +103,12 @@ Router.put('/update/profile',upload.single("myImage"), async (req,res)=>{
     const { nom } = req.body
     const { prenom } = req.body
     const { address } = req.body
-    // const { country } = req.body
+    const { country } = req.body
+    const { sex } = req.body
     const { tel } = req.body
     const { fax } = req.body
-    const { Website } = req.body
+    const { website } = req.body
+
     const url =`http://${req.hostname}:${process.env.PORT || 3001}/userimg/${req.file.filename}`
 
     const user = await db.User.findOne({ where : {id : req.userData.userId}})
@@ -109,12 +118,14 @@ Router.put('/update/profile',upload.single("myImage"), async (req,res)=>{
 
     user.full_name = nom+" "+prenom
     user.address = address
-    // user.country = country
     user.tel = tel
     user.fax = fax
-    user.Website = Website
+    user.Website = website
     user.user_img = url
+    user.user_sex = sex
+    user.country = country
     user.ftime = "false"
+    
 
 
    await user.save()
@@ -174,12 +185,12 @@ Router.put('/update/profile/admin/:id', async (req,res)=>{
   const { email } = req.body
   const { pwd } = req.body
   const { level } = req.body
-  
+  const { equipe_id } = req.body
 
   
 
 
-  const user = await db.User.findOne({ where : {id : req.params.id}})
+  const user = await db.User.findOne({ where : {id : req.params.id} , include: db.Equipe})
   if(!user) res.status(201).json({
     message : 'user not found'
   })
@@ -192,20 +203,20 @@ Router.put('/update/profile/admin/:id', async (req,res)=>{
   user.full_name = full_name
   user.user_level = level
   user.user_email = email
+  user.EquipeId = equipe_id
 
  await user.save()
- .then((user)=>{
+ const updateduser = await db.User.findOne({ where : {id : user.id} , include: db.Equipe})
   res.status(200).json({
     message :' user updated',
-    user
+    updateduser
   })
- })
 
 })
 
 //delete user
 Router.delete('/user/:id', async (req,res)=>{
-  const user = await db.User.findOne({ where : {user_email : email}})
+  const user = await db.User.findOne({ where : {id : req.params.id}})
   if(!user) res.status(201).json({
     message : 'user not found'
   })

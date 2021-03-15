@@ -90,10 +90,6 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: true,
       },
-      equipe_id: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-      },
       tel_ip: {
         type: DataTypes.INTEGER,
         allowNull: true,
@@ -111,9 +107,9 @@ module.exports = (sequelize, DataTypes) => {
       
     });
 
-    // User.associate = function(models) { 
-    //   User.hasMany(models.Post)
-    // };
+    User.associate = function(models) { 
+      User.belongsTo(models.Equipe)
+    };
    
     return User;
   };
