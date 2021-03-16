@@ -21,12 +21,14 @@ const userRouter = require('./Route/UsersRoute')
 const authRouter = require('./Route/authRoute')
 const equipeRoute = require('./Route/equipeRoute')
 const serviceRoute = require('./Route/serviceRoute')
+const compteCliRoute = require('./Route/compteCliRoute')
 
 
 app.use('/user',userRouter)
 app.use('/auth',authRouter)
 app.use('/equipe',equipeRoute)
 app.use('/service',serviceRoute)
+app.use('/clients',compteCliRoute)
 
 db.sequelize.sync().then(() => {
     app.listen(Port , ()=>{

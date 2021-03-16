@@ -69,7 +69,8 @@ Router.post('/',async (req,res)=>{
        try {
 
       const newequipe =   await  db.Equipe.create(NewEquipe)
-      .then((equipe)=>{
+      .then(async(eq)=>{
+        const equipe = await db.Equipe.findOne({ where: {id : eq.id} , include:[{model :  db.User},{model : db.Service}] });
         res.status(200).json({
           message : "equipe added",
           equipe,

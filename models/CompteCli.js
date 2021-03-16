@@ -1,23 +1,24 @@
 module.exports = (sequelize, DataTypes) => {
-    const Service  = sequelize.define("Service", {
+    const CompteClient  = sequelize.define("CompteClient", {
     id:{
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: DataTypes.INTEGER
         },
-      Nom_service: {
+      Nom_compteCli: {
         type: DataTypes.STRING,
         allowNull: true
       },
+    
       
       
       
     });
 
-    Service.associate = function(models) { 
-      Service.hasMany(models.Equipe)
-    };
+    // Equipe.associate = function(models) { 
+    //     Equipe.hasMany(models.User)
+    // };
    
-    return Service;
+    return CompteClient;
   };

@@ -21,10 +21,10 @@ Router.get('/', async(req,res)=>{
 
 
 //get one user by email
-Router.get('/:email',async (req,res)=>{
+Router.get('/:id',async (req,res)=>{
 
 
-  const user = await db.User.findOne({ where: {user_email : req.params.email}});
+  const user = await db.User.findOne({ where: {id : req.params.id}});
   if (!user) res.status(201).json({
     message : "user not found"
   }) 
