@@ -10,15 +10,18 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: true
       },
+      description: {
+        type: DataTypes.STRING,
+        allowNull: true
+      },
     
-      
-      
-      
     });
 
-    // Equipe.associate = function(models) { 
-    //     Equipe.hasMany(models.User)
-    // };
+    CompteClient.associate = function(models) { 
+        CompteClient.hasOne(models.Clientimg ,  { onDelete: 'cascade' })
+        CompteClient.belongsTo(models.Service)
+        CompteClient.belongsTo(models.Equipe)
+    };
    
     return CompteClient;
   };

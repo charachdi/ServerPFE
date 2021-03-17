@@ -18,6 +18,7 @@ module.exports = (sequelize, DataTypes) => {
 
     Equipe.associate = function(models) { 
         Equipe.hasMany(models.User)
+        Equipe.hasMany(models.CompteClient)
         Equipe.belongsTo(models.Service)
     };
    

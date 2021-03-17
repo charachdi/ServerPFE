@@ -17,6 +17,7 @@ module.exports = (sequelize, DataTypes) => {
 
     Service.associate = function(models) { 
       Service.hasMany(models.Equipe)
+      Service.hasMany(models.CompteClient)
     };
    
     return Service;
