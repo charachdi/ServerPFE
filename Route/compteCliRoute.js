@@ -10,7 +10,7 @@ const unlink = promisify(fs.unlink)
 
 //get all compte client
 Router.get('/', async(req,res)=>{
- const compteCli = await db.CompteClient.findAll({include:[{model :  db.Equipe},{model : db.Service}, {model : db.Clientimg}]})
+ const compteCli = await db.CompteClient.findAll({include:[{model :  db.Equipe},{model : db.Service}, {model : db.Clientimg}, {model : db.Theme}]})
  res.send(compteCli)
 
 
@@ -21,7 +21,7 @@ Router.get('/', async(req,res)=>{
 Router.get('/:id',async (req,res)=>{
 
 
-  const compteCli = await db.CompteClient.findOne({ where: {id : req.params.id} , include:[{model :  db.Equipe},{model : db.Service}, {model : db.Clientimg}]});
+  const compteCli = await db.CompteClient.findOne({ where: {id : req.params.id} , include:[{model :  db.Equipe},{model : db.Service}, {model : db.Clientimg}, {model : db.Theme}]});
   if (!compteCli) res.status(201).json({
     message : "compte client not found"
   }) 
@@ -41,6 +41,7 @@ Router.post('/', upload.array('clientimg[]'),async (req,res)=>{
         const {ServiceId} = req.body
         const {EquipeId} = req.body
         const {description} = req.body
+        const {color} = req.body
        
        
       // Create new compte client
@@ -58,6 +59,11 @@ Router.post('/', upload.array('clientimg[]'),async (req,res)=>{
           img_background_path :req.files[1].path,
           CompteClientId : ""
          }
+
+         const newtheme = {
+           Color : color,
+           CompteClientId : ""
+         }
          
        
       //  // saving the new compte client  
@@ -65,10 +71,11 @@ Router.post('/', upload.array('clientimg[]'),async (req,res)=>{
 
   const savedcompte =  await  db.CompteClient.create(NewCompteCli)
   Newclientimg.CompteClientId = savedcompte.id
-
+  newtheme.CompteClientId = savedcompte.id
+  await db.Theme.create(newtheme)
   await  db.Clientimg.create(Newclientimg)
   .then(async()=>{
-       const client = await db.CompteClient.findOne({ where: {id : savedcompte.id} , include:[{model :  db.Equipe},{model : db.Service}, {model : db.Clientimg}]});
+       const client = await db.CompteClient.findOne({ where: {id : savedcompte.id} , include:[{model :  db.Equipe},{model : db.Service}, {model : db.Clientimg}, {model : db.Theme}]});
          res.status(200).json({
           message : "compte client added",
           client,
@@ -87,20 +94,21 @@ Router.post('/', upload.array('clientimg[]'),async (req,res)=>{
 Router.put('/update/clients/:id', upload.array('clientimg[]'),async (req,res)=>{
 
 
-
-  
-
         const {Nom_compteCli} = req.body
         const {ServiceId} = req.body
         const {EquipeId} = req.body
         const {description} = req.body
+        const {color} = req.body
 
-    const compteCli = await db.CompteClient.findOne({ where : {id : req.params.id } , include:[{model :  db.Equipe },{model : db.Service}, {model : db.Clientimg}] })
+    const compteCli = await db.CompteClient.findOne({ where : {id : req.params.id } , include:[{model :  db.Equipe },{model : db.Service}, {model : db.Clientimg}, {model : db.Theme}] })
     if(!compteCli) res.status(201).json({
       message : 'compte client not found'
     })
      const comImg =   await  db.Clientimg.findOne({ where : {CompteClientId : compteCli.id }})
+     const theme =   await  db.Theme.findOne({ where : {CompteClientId : compteCli.id }})
+     theme.Color = color
 
+     await theme.save()
     compteCli.Nom_compteCli = Nom_compteCli
     compteCli.description = description
     if(ServiceId !== ""){
@@ -136,7 +144,7 @@ Router.put('/update/clients/:id', upload.array('clientimg[]'),async (req,res)=>{
    await compteCli.save()
    .then(async(cli)=>{
  
-    const client = await db.CompteClient.findOne({ where : {id : cli.id } , include:[{model :  db.Equipe },{model : db.Service},{model : db.Clientimg}] })
+    const client = await db.CompteClient.findOne({ where : {id : cli.id } , include:[{model :  db.Equipe },{model : db.Service},{model : db.Clientimg}, {model : db.Theme}] })
     res.status(200).json({
       message :' compte client updated',
       client
@@ -147,6 +155,50 @@ Router.put('/update/clients/:id', upload.array('clientimg[]'),async (req,res)=>{
   })
 
 
+
+  //update compte client
+Router.put('/update/clients/false/:id',async (req,res)=>{
+
+
+  const {Nom_compteCli} = req.body
+  const {ServiceId} = req.body
+  const {EquipeId} = req.body
+  const {description} = req.body
+  const {color} = req.body
+  
+const compteCli = await db.CompteClient.findOne({ where : {id : req.params.id } , include:[{model :  db.Equipe },{model : db.Service}, {model : db.Clientimg}, {model : db.Theme}] })
+if(!compteCli) res.status(201).json({
+message : 'compte client not found'
+})
+const theme =   await  db.Theme.findOne({ where : {CompteClientId : compteCli.id }})
+theme.Color = color
+
+await theme.save()
+compteCli.Nom_compteCli = Nom_compteCli
+compteCli.description = description
+if(ServiceId !== ""){
+compteCli.ServiceId = ServiceId 
+}
+if(EquipeId !== ""){
+compteCli.EquipeId  = EquipeId
+}
+
+
+
+await compteCli.save()
+.then(async(cli)=>{
+
+const client = await db.CompteClient.findOne({ where : {id : cli.id } , include:[{model :  db.Equipe },{model : db.Service},{model : db.Clientimg}, {model : db.Theme}] })
+res.status(200).json({
+message :' compte client updated',
+client
+})
+
+})
+
+})
+
+
   //update profile img only
 
   Router.put('/update/clients/prof/:id',upload.array('clientimg[]'), async (req,res)=>{
@@ -155,13 +207,17 @@ Router.put('/update/clients/:id', upload.array('clientimg[]'),async (req,res)=>{
     const {ServiceId} = req.body
     const {EquipeId} = req.body
     const {description} = req.body
+    const {color} = req.body
 
-const compteCli = await db.CompteClient.findOne({ where : {id : req.params.id } , include:[{model :  db.Equipe },{model : db.Service}, {model : db.Clientimg}] })
+const compteCli = await db.CompteClient.findOne({ where : {id : req.params.id } , include:[{model :  db.Equipe },{model : db.Service}, {model : db.Clientimg}, {model : db.Theme}] })
 if(!compteCli) res.status(201).json({
   message : 'compte client not found'
 })
  const comImg =   await  db.Clientimg.findOne({ where : {CompteClientId : compteCli.id }})
+ const theme =   await  db.Theme.findOne({ where : {CompteClientId : compteCli.id }})
+ theme.Color = color
 
+ await theme.save()
 compteCli.Nom_compteCli = Nom_compteCli
 compteCli.description = description
 if(ServiceId !== ""){
@@ -186,7 +242,7 @@ if(req.files[0]){
 await compteCli.save()
 .then(async(cli)=>{
 
-const client = await db.CompteClient.findOne({ where : {id : cli.id } , include:[{model :  db.Equipe },{model : db.Service},{model : db.Clientimg}] })
+const client = await db.CompteClient.findOne({ where : {id : cli.id } , include:[{model :  db.Equipe },{model : db.Service},{model : db.Clientimg}, {model : db.Theme}] })
 res.status(200).json({
   message :' compte client updated',
   client
@@ -205,14 +261,17 @@ Router.put('/update/clients/bg/:id',upload.array('clientimg[]'), async (req,res)
     const {ServiceId} = req.body
     const {EquipeId} = req.body
     const {description} = req.body
+    const {color} = req.body
 
-
-const compteCli = await db.CompteClient.findOne({ where : {id : req.params.id } , include:[{model :  db.Equipe },{model : db.Service}, {model : db.Clientimg}] })
+const compteCli = await db.CompteClient.findOne({ where : {id : req.params.id } , include:[{model :  db.Equipe },{model : db.Service}, {model : db.Clientimg}, {model : db.Theme}] })
 if(!compteCli) res.status(201).json({
   message : 'compte client not found'
 })
  const comImg =   await  db.Clientimg.findOne({ where : {CompteClientId : compteCli.id }})
+ const theme =   await  db.Theme.findOne({ where : {CompteClientId : compteCli.id }})
+ theme.Color = color
 
+ await theme.save()
 
 compteCli.Nom_compteCli = Nom_compteCli
 compteCli.description = description
@@ -240,7 +299,7 @@ if(req.files[0]){
 await compteCli.save()
 .then(async(cli)=>{
 
-const client = await db.CompteClient.findOne({ where : {id : cli.id } , include:[{model :  db.Equipe },{model : db.Service},{model : db.Clientimg}] })
+const client = await db.CompteClient.findOne({ where : {id : cli.id } , include:[{model :  db.Equipe },{model : db.Service},{model : db.Clientimg}, {model : db.Theme}] })
 res.status(200).json({
   message :' compte client updated',
   client
