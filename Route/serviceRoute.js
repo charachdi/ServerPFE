@@ -6,7 +6,7 @@ const db = require("../models");
 
 //get all service
 Router.get('/', async(req,res)=>{
- const service = await db.Service.findAll()
+ const service = await db.Service.findAll({ include: [{model :  db.Equipe }]})
  console.log(service)
  res.send(service)
 
@@ -18,7 +18,7 @@ Router.get('/', async(req,res)=>{
 Router.get('/:id',async (req,res)=>{
 
 
-  const service = await db.Service.findOne({ where: {id : req.params.id}});
+  const service = await db.Service.findOne({ where: {id : req.params.id} , include: [{model :  db.Equipe }]});
   if (!service) res.status(201).json({
     message : "service not found"
   }) 
@@ -71,7 +71,7 @@ Router.put('/update/service/:id', async (req,res)=>{
  
   
 
-    const service = await db.Service.findOne({ where : {id : req.params.id}})
+    const service = await db.Service.findOne({ where : {id : req.params.id} , include: [{model :  db.Equipe }]})
     if(!service) res.status(201).json({
       message : 'service not found'
     })
