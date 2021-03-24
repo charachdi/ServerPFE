@@ -7,7 +7,9 @@ const { v4: uuidv4 } = require('uuid');
 const upload =  require('./../store/userprofile') 
 const authentification = require('./../midellware/authentification')
 const Mailer =  require('./../midellware/Mailer')
-
+const { promisify } = require('util')
+const fs = require("fs")
+const unlink = promisify(fs.unlink)
 
 Router.use(authentification)
 //get all users
@@ -141,11 +143,16 @@ Router.put('/update/profileimg',upload.single("myImage"), async (req,res)=>{
     const { website } = req.body
 
     const url =`http://${req.hostname}:${process.env.PORT || 3001}/userimg/${req.file.filename}`
+    const path = req.file.path
 
     const user = await db.User.findOne({ where : {id : req.userData.userId}})
     if(!user) res.status(201).json({
       message : 'user not found'
     })
+    if(user.img_path != null){
+      await unlink(user.img_path)
+    }
+  
 
     user.full_name = fullName
     user.address = address
@@ -153,6 +160,7 @@ Router.put('/update/profileimg',upload.single("myImage"), async (req,res)=>{
     user.fax = fax
     user.Website = website
     user.user_img = url
+    user.img_path = path
     user.user_sex = sex
     user.country = country
     user.ftime = "false"
@@ -234,7 +242,11 @@ Router.put('/update/profile/admin/:id', async (req,res)=>{
   user.full_name = full_name
   user.user_level = level
   user.user_email = email
-  user.EquipeId = equipe_id
+
+  if(equipe_id != ""){
+    user.EquipeId = equipe_id
+  }
+  
 
  await user.save()
  const updateduser = await db.User.findOne({ where : {id : user.id} , include: db.Equipe})
@@ -251,6 +263,8 @@ Router.delete('/user/:id', async (req,res)=>{
   if(!user) res.status(201).json({
     message : 'user not found'
   })
+
+  await unlink(user.img_path)
 
   user.destroy();
   res.status(200).json({

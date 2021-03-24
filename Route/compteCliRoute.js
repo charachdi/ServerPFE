@@ -318,6 +318,9 @@ Router.delete('/:id', async (req,res)=>{
     message : 'compte client not found'
   })
 
+  await unlink(compteCli.Clientimg.img_profile_path)
+  await unlink(compteCli.Clientimg.img_background_path)
+
   compteCli.destroy();
   res.status(200).json({
     message : "compte client deleted",
