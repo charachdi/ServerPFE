@@ -24,7 +24,7 @@ Router.get('/', async(req,res)=>{
 Router.get('/:id',async (req,res)=>{
 
 
-  const user = await db.User.findOne({ where: {id : req.params.id}});
+  const user = await db.User.findOne({ where: {id : req.params.id} , include: [{model: db.Equipe, include: [{model :db.CompteClient , include :[{model : db.Clientimg},{model : db.Theme}]}] }] });
   if (!user) res.status(201).json({
     message : "user not found"
   }) 
