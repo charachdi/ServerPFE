@@ -88,20 +88,51 @@ Router.post('/',async (req,res)=>{
 
 
 
-Router.put('/update/test/',upload.single("myImage"), (req, res)=>{
+Router.put('/update/profile/', async(req, res)=>{
   
+ 
+    const { fullName } = req.body
+    const { address } = req.body
+    const { country } = req.body
+    const { sex } = req.body
+    const { tel } = req.body
+    const { fax } = req.body
+    const { website } = req.body
+
+   
+
+    const user = await db.User.findOne({ where : {id : req.userData.userId}})
+    if(!user) res.status(201).json({
+      message : 'user not found'
+    })
+
+    user.full_name = fullName
+    user.address = address
+    user.tel = tel
+    user.fax = fax
+    user.Website = website
+    user.user_sex = sex
+    user.country = country
+    user.ftime = "false"
+    
+console.log(req.body)
+
+   await user.save()
+   .then((user)=>{
+    res.status(200).json({
+      message :' user updated',
+      user
+    })
+   })
   
-  console.log(req.userData)
-  res.send("ok")
 })
 
 
 //update user
-Router.put('/update/profile',upload.single("myImage"), async (req,res)=>{
+Router.put('/update/profileimg',upload.single("myImage"), async (req,res)=>{
 
 
-    const { nom } = req.body
-    const { prenom } = req.body
+    const { fullName } = req.body
     const { address } = req.body
     const { country } = req.body
     const { sex } = req.body
@@ -116,7 +147,7 @@ Router.put('/update/profile',upload.single("myImage"), async (req,res)=>{
       message : 'user not found'
     })
 
-    user.full_name = nom+" "+prenom
+    user.full_name = fullName
     user.address = address
     user.tel = tel
     user.fax = fax
