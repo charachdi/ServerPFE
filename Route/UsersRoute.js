@@ -100,7 +100,7 @@ Router.put('/update/profile/', async(req, res)=>{
     const { website } = req.body
 
    
-
+    console.log(req.userData.userId)
     const user = await db.User.findOne({ where : {id : req.userData.userId}})
     if(!user) res.status(201).json({
       message : 'user not found'
