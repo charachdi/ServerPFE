@@ -2,12 +2,13 @@ const express = require('express')
 const Router = express.Router()
 const db = require("../models");
 const upload =  require('./../store/clientprofile') 
+const authentification = require('./../midellware/authentification')
 const { promisify } = require('util')
 const fs = require("fs")
 const unlink = promisify(fs.unlink)
 
 
-
+// Router.use(authentification)
 //get all compte client
 Router.get('/', async(req,res)=>{
  const compteCli = await db.CompteClient.findAll({include:[{model :  db.Equipe},{model : db.Service}, {model : db.Clientimg}, {model : db.Theme}]})
@@ -20,8 +21,7 @@ Router.get('/', async(req,res)=>{
 //get one compte client by id
 Router.get('/:id',async (req,res)=>{
 
-
-  const compteCli = await db.CompteClient.findOne({ where: {id : req.params.id} , include:[{model :  db.Equipe},{model : db.Service}, {model : db.Clientimg}, {model : db.Theme}]});
+  const compteCli = await db.CompteClient.findOne({ where : {id : req.params.id } , include:[{model :  db.Equipe , include : [{model : db.User}] },{model : db.Service}, {model : db.Clientimg}, {model : db.Theme},{model : db.Auth  , include :[{model : db.Permission},{model : db.User}]}] })
   if (!compteCli) res.status(201).json({
     message : "compte client not found"
   }) 
@@ -72,6 +72,26 @@ Router.post('/', upload.array('clientimg[]'),async (req,res)=>{
   const savedcompte =  await  db.CompteClient.create(NewCompteCli)
   Newclientimg.CompteClientId = savedcompte.id
   newtheme.CompteClientId = savedcompte.id
+
+
+  // auth and permission
+ const equipe = await db.Equipe.findOne({ where: {id : EquipeId} , include:[{model :  db.User}] });
+
+
+ equipe.Users.forEach(async(user) => {
+  const newAuth = {
+    UserId :user.id ,
+    CompteClientId : savedcompte.id
+  }
+  const savedauth = await db.Auth.create(newAuth)
+  
+   const newpermission = {
+    AuthId : savedauth.id
+   }
+   await db.Permission.create(newpermission)
+ });
+
+
   await db.Theme.create(newtheme)
   await  db.Clientimg.create(Newclientimg)
   .then(async()=>{
@@ -101,10 +121,14 @@ Router.put('/update/clients/:id', upload.array('clientimg[]'),async (req,res)=>{
         const {color} = req.body
 
     const compteCli = await db.CompteClient.findOne({ where : {id : req.params.id } , include:[{model :  db.Equipe },{model : db.Service}, {model : db.Clientimg}, {model : db.Theme}] })
+    const auth = await db.Auth.findAll({ where : {CompteClientId : compteCli.id }})
+    const equipe = await db.Equipe.findOne({ where: {id : EquipeId} , include:[{model :  db.User}] });
+   
     if(!compteCli) res.status(201).json({
       message : 'compte client not found'
     })
-     const comImg =   await  db.Clientimg.findOne({ where : {CompteClientId : compteCli.id }})
+   
+    const comImg =   await  db.Clientimg.findOne({ where : {CompteClientId : compteCli.id }})
      const theme =   await  db.Theme.findOne({ where : {CompteClientId : compteCli.id }})
      theme.Color = color
 
@@ -114,8 +138,25 @@ Router.put('/update/clients/:id', upload.array('clientimg[]'),async (req,res)=>{
     if(ServiceId !== ""){
       compteCli.ServiceId = ServiceId 
     }
-    if(EquipeId !== ""){
+    if(EquipeId !== compteCli.EquipeId ){
       compteCli.EquipeId  = EquipeId
+      auth.forEach(A => {
+        A.destroy()
+      });
+      equipe.Users.forEach(async(user) => {
+        const newAuth = {
+          UserId :user.id ,
+          CompteClientId : savedcompte.id
+        }
+        const savedauth = await db.Auth.create(newAuth)
+        
+         const newpermission = {
+          AuthId : savedauth.id
+         }
+         await db.Permission.create(newpermission)
+       });
+     
+
     }
    
     if(req.files[0]){
@@ -159,14 +200,16 @@ Router.put('/update/clients/:id', upload.array('clientimg[]'),async (req,res)=>{
   //update compte client
 Router.put('/update/clients/false/:id',async (req,res)=>{
 
-
+  console.log(req.userData)
   const {Nom_compteCli} = req.body
   const {ServiceId} = req.body
   const {EquipeId} = req.body
   const {description} = req.body
   const {color} = req.body
   
-const compteCli = await db.CompteClient.findOne({ where : {id : req.params.id } , include:[{model :  db.Equipe },{model : db.Service}, {model : db.Clientimg}, {model : db.Theme}] })
+  const compteCli = await db.CompteClient.findOne({ where : {id : req.params.id } , include:[{model :  db.Equipe },{model : db.Service}, {model : db.Clientimg}, {model : db.Theme}] })
+  const auth = await db.Auth.findAll({ where : {CompteClientId : compteCli.id }})
+  const equipe = await db.Equipe.findOne({ where: {id : EquipeId} , include:[{model :  db.User}] });
 if(!compteCli) res.status(201).json({
 message : 'compte client not found'
 })
@@ -179,8 +222,23 @@ compteCli.description = description
 if(ServiceId !== ""){
 compteCli.ServiceId = ServiceId 
 }
-if(EquipeId !== ""){
+if(EquipeId !== compteCli.EquipeId){
 compteCli.EquipeId  = EquipeId
+auth.forEach(A => {
+  A.destroy()
+});
+equipe.Users.forEach(async(user) => {
+  const newAuth = {
+    UserId :user.id ,
+    CompteClientId : compteCli.id
+  }
+  const savedauth = await db.Auth.create(newAuth)
+  
+   const newpermission = {
+    AuthId : savedauth.id
+   }
+   await db.Permission.create(newpermission)
+ });
 }
 
 
@@ -209,7 +267,9 @@ client
     const {description} = req.body
     const {color} = req.body
 
-const compteCli = await db.CompteClient.findOne({ where : {id : req.params.id } , include:[{model :  db.Equipe },{model : db.Service}, {model : db.Clientimg}, {model : db.Theme}] })
+    const compteCli = await db.CompteClient.findOne({ where : {id : req.params.id } , include:[{model :  db.Equipe },{model : db.Service}, {model : db.Clientimg}, {model : db.Theme}] })
+    const auth = await db.Auth.findAll({ where : {CompteClientId : compteCli.id }})
+    const equipe = await db.Equipe.findOne({ where: {id : EquipeId} , include:[{model :  db.User}] });
 if(!compteCli) res.status(201).json({
   message : 'compte client not found'
 })
@@ -223,8 +283,23 @@ compteCli.description = description
 if(ServiceId !== ""){
   compteCli.ServiceId = ServiceId 
 }
-if(EquipeId !== ""){
+if(EquipeId !== compteCli.EquipeId){
   compteCli.EquipeId  = EquipeId
+  auth.forEach(A => {
+    A.destroy()
+  });
+  equipe.Users.forEach(async(user) => {
+    const newAuth = {
+      UserId :user.id ,
+      CompteClientId : compteCli.id
+    }
+    const savedauth = await db.Auth.create(newAuth)
+    
+     const newpermission = {
+      AuthId : savedauth.id
+     }
+     await db.Permission.create(newpermission)
+   });
 }
 
 if(req.files[0]){
@@ -263,7 +338,10 @@ Router.put('/update/clients/bg/:id',upload.array('clientimg[]'), async (req,res)
     const {description} = req.body
     const {color} = req.body
 
-const compteCli = await db.CompteClient.findOne({ where : {id : req.params.id } , include:[{model :  db.Equipe },{model : db.Service}, {model : db.Clientimg}, {model : db.Theme}] })
+    const compteCli = await db.CompteClient.findOne({ where : {id : req.params.id } , include:[{model :  db.Equipe },{model : db.Service}, {model : db.Clientimg}, {model : db.Theme}] })
+    const auth = await db.Auth.findAll({ where : {CompteClientId : compteCli.id }})
+    const equipe = await db.Equipe.findOne({ where: {id : EquipeId} , include:[{model :  db.User}] });
+
 if(!compteCli) res.status(201).json({
   message : 'compte client not found'
 })
@@ -278,8 +356,23 @@ compteCli.description = description
 if(ServiceId !== ""){
   compteCli.ServiceId = ServiceId 
 }
-if(EquipeId !== ""){
+if(EquipeId !== compteCli.EquipeId){
   compteCli.EquipeId  = EquipeId
+  auth.forEach(A => {
+    A.destroy()
+  });
+  equipe.Users.forEach(async(user) => {
+    const newAuth = {
+      UserId :user.id ,
+      CompteClientId : compteCli.id
+    }
+    const savedauth = await db.Auth.create(newAuth)
+    
+     const newpermission = {
+      AuthId : savedauth.id
+     }
+     await db.Permission.create(newpermission)
+   });
 }
 
 
@@ -313,13 +406,14 @@ res.status(200).json({
 
 //delete compte client
 Router.delete('/:id', async (req,res)=>{
-  const compteCli = await db.CompteClient.findOne({ where : {id : req.params.id}})
+  const compteCli = await db.CompteClient.findOne({ where : {id : req.params.id} ,  include:[{model :  db.Clientimg }]})
   if(!compteCli) res.status(201).json({
     message : 'compte client not found'
   })
 
   await unlink(compteCli.Clientimg.img_profile_path)
   await unlink(compteCli.Clientimg.img_background_path)
+ 
 
   compteCli.destroy();
   res.status(200).json({

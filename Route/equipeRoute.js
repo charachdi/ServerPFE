@@ -6,7 +6,7 @@ const db = require("../models");
 
 //get all equipes
 Router.get('/', async(req,res)=>{
- const equipe = await db.Equipe.findAll({ include:[{model :  db.User},{model : db.Service}] })
+ const equipe = await db.Equipe.findAll({ include:[{model :  db.User},{model : db.Service},{model : db.CompteClient}] })
  
 
  res.send(equipe)
