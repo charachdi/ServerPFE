@@ -27,6 +27,7 @@ Router.get('/:id', async (req, res) => {
 
 
   const user = await db.User.findOne({ where: { id: req.params.id }, include: [{ model: db.Equipe, include: [{ model: db.Service }, { model: db.CompteClient, include: [{ model: db.Clientimg }, { model: db.Theme }, { model: db.Auth, where: { UserId: req.userData.userId }, include: { model: db.Permission } }] }] }] });
+  console.log(user)
   if (!user) res.status(201).json({
     message: "user not found"
   })
@@ -266,7 +267,7 @@ Router.put('/update/profile/admin/:id', async (req, res) => {
   user.user_level = level
   user.user_email = email
 
-  if (equipe_id != user.EquipeId) {
+  if (equipe_id !== user.EquipeId && equipe_id !== "") {
       user.EquipeId = equipe_id
       const auth = await db.Auth.findAll({ where : {UserId : user.id }})
       auth.forEach(A => {

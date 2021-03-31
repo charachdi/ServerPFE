@@ -25,6 +25,52 @@ Router.get("/:id", async (req, res) => {
   });
 });
 
+
+
+//get one service for home page
+Router.get("/dataservice/:id", async (req, res) => {
+  const service = await db.Service.findOne({
+    where: { id: req.params.id },
+    include: [{ model: db.Equipe , include :[{model :db.User , include :{model : db.Equipe}} , {model : db.Service},{model : db.CompteClient , include:[{model : db.Clientimg}, {model : db.Theme},{model : db.Service},{model : db.Equipe}]}]}],
+  });
+  if (!service)
+    res.status(201).json({
+      message: "service not found",
+    });
+
+    const users = []
+    const equipe = []
+    const clients = []
+
+    service.Equipes.forEach(eq => {
+        eq.Users.forEach(user => {
+          users.push(user)
+        });
+
+        eq.CompteClients.forEach(cl => {
+          clients.push(cl)
+        });
+    });
+    service.Equipes.forEach(eq => {
+      equipe.push(eq)
+    });
+
+    
+  
+
+  res.status(200).json({
+   service : service,
+   equipes :equipe,
+   users : users,
+   clients : clients
+
+  });
+
+});
+
+
+
+
 // add service
 Router.post("/", async (req, res) => {
   const { nomService } = req.body;
