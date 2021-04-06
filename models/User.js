@@ -114,6 +114,7 @@ module.exports = (sequelize, DataTypes) => {
     User.associate = function(models) { 
       User.belongsTo(models.Equipe)
       User.hasMany(models.Auth ,  { onDelete: 'cascade'})
+      User.hasOne(models.Chefs ,  { onDelete: 'cascade'})
     };
    
     return User;

@@ -26,7 +26,7 @@ Router.get("/:id", async (req, res) => {
 });
 
 
-
+// , where : {user_level : ["Chef equipe","Collaborateur"]}
 //get one service for home page
 Router.get("/dataservice/:id", async (req, res) => {
   const service = await db.Service.findOne({
@@ -37,7 +37,7 @@ Router.get("/dataservice/:id", async (req, res) => {
     res.status(201).json({
       message: "service not found",
     });
-
+    console.log(service)
     const users = []
     const equipe = []
     const clients = []
@@ -67,6 +67,24 @@ Router.get("/dataservice/:id", async (req, res) => {
   });
 
 });
+
+//get one service for home page
+Router.get("/dataservicecompte/:id", async (req, res) => {
+  const service = await db.Service.findOne({
+    where: { id: req.params.id },
+    include: [{ model: db.Equipe , include :[{model : db.CompteClient , include:[{model : db.Clientimg}, {model : db.Theme}]}]}],
+  });
+  if (!service)
+    res.status(201).json({
+      message: "service not found",
+    });
+   
+
+  res.status(200).send(service)
+
+});
+
+
 
 
 

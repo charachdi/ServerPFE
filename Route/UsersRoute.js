@@ -14,8 +14,7 @@ const unlink = promisify(fs.unlink)
 Router.use(authentification)
 //get all users
 Router.get('/', async (req, res) => {
-  const users = await db.User.findAll({ include: db.Equipe })
-  console.log(users)
+  const users = await db.User.findAll({ include: [{model : db.Equipe},{model: db.Chefs}] })
   res.send(users)
 
 
@@ -26,7 +25,7 @@ Router.get('/', async (req, res) => {
 Router.get('/:id', async (req, res) => {
 
 
-  const user = await db.User.findOne({ where: { id: req.params.id }, include: [{ model: db.Equipe, include: [{ model: db.Service }, { model: db.CompteClient, include: [{ model: db.Clientimg }, { model: db.Theme }, { model: db.Auth, where: { UserId: req.userData.userId }, include: { model: db.Permission } }] }] }] });
+  const user = await db.User.findOne({ where: { id: req.params.id }, include: [{model: db.Chefs},{ model: db.Equipe, include: [{ model: db.Service }, { model: db.CompteClient, include: [{ model: db.Clientimg }, { model: db.Theme }, { model: db.Auth, where: { UserId: req.userData.userId }, include: { model: db.Permission } }] }] }] });
   console.log(user)
   if (!user) res.status(201).json({
     message: "user not found"
@@ -44,7 +43,8 @@ Router.post('/', async (req, res) => {
   const { email } = req.body
   const { pwd } = req.body
   const { level } = req.body
-  const { equipe_id } = req.body
+  const { equipe_id } = req.body  
+  const { ServiceId } = req.body
 
   //check if user exists
   const emailexist = await db.User.findOne({ where: { user_email: email } });
@@ -65,6 +65,8 @@ Router.post('/', async (req, res) => {
     //  activation_code : uuidv4()
   }
 
+  
+
   if (equipe_id !== "") {
     NewUser.EquipeId = equipe_id
   }
@@ -75,6 +77,14 @@ Router.post('/', async (req, res) => {
     const newuser = await db.User.create(NewUser)
       .then(async(user) => {
         // Mailer()
+
+        if(level === "Chef Service"){
+          const chefs = {
+            UserId : user.id,
+            ServiceId : ServiceId
+          }
+          await db.Chefs.create(chefs)
+        }
 
         // auth and permission
         if (equipe_id !== "") {
@@ -248,15 +258,35 @@ Router.put('/update/profile/admin/:id', async (req, res) => {
   const { email } = req.body
   const { pwd } = req.body
   const { level } = req.body
-  const { equipe_id } = req.body
+  const { equipe_id } = req.body  
+  const { ServiceId } = req.body
 
 
 
 
-  const user = await db.User.findOne({ where: { id: req.params.id }, include: [{model :db.Equipe} , {model : db.Auth}] })
+
+
+  const user = await db.User.findOne({ where: { id: req.params.id }, include: [{model :db.Equipe} , {model : db.Auth},{model: db.Chefs}] })
   if (!user) res.status(201).json({
     message: 'user not found'
   })
+
+
+  //checking for updation level from chef service
+
+  if(ServiceId !== ""){
+    if(user.Chef.ServiceId !== ServiceId){
+      const chefs  = await db.Chefs.findOne({where : { UserId : req.params.id }})
+       chefs.destroy()
+        const chef = {
+        UserId : user.id,
+        ServiceId : ServiceId
+      }
+      await db.Chefs.create(chef)
+    }
+  }
+  
+
   if (pwd != "") {
     //Hash password
     const salt = await bycrpt.genSalt(10);
@@ -298,7 +328,7 @@ Router.put('/update/profile/admin/:id', async (req, res) => {
 
 
   await user.save()
-  const updateduser = await db.User.findOne({ where: { id: user.id }, include: db.Equipe })
+  const updateduser = await db.User.findOne({ where: { id: user.id }, include: [{model : db.Equipe},{model: db.Chefs}] })
   res.status(200).json({
     message: ' user updated',
     updateduser
