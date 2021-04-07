@@ -14,7 +14,7 @@ const unlink = promisify(fs.unlink)
 Router.use(authentification)
 //get all users
 Router.get('/', async (req, res) => {
-  const users = await db.User.findAll({ include: [{model : db.Equipe},{model: db.Chefs}] })
+  const users = await db.User.findAll({ include: [{model : db.Equipe , include :{model:db.Service}},{model: db.Chefs}] })
   res.send(users)
 
 
@@ -25,7 +25,7 @@ Router.get('/', async (req, res) => {
 Router.get('/:id', async (req, res) => {
 
 
-  const user = await db.User.findOne({ where: { id: req.params.id }, include: [{model: db.Chefs},{ model: db.Equipe, include: [{ model: db.Service }, { model: db.CompteClient, include: [{ model: db.Clientimg }, { model: db.Theme }, { model: db.Auth, where: { UserId: req.userData.userId }, include: { model: db.Permission } }] }] }] });
+  const user = await db.User.findOne({ where: { id: req.params.id }, include: [{model: db.Chefs, include:{model : db.Service}},{ model: db.Equipe, include: [{ model: db.Service }, { model: db.CompteClient, include: [{ model: db.Clientimg }, { model: db.Theme }, { model: db.Auth, where: { UserId: req.userData.userId }, include: { model: db.Permission } }] }] }] });
   console.log(user)
   if (!user) res.status(201).json({
     message: "user not found"
