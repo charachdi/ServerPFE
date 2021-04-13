@@ -14,7 +14,7 @@ const unlink = promisify(fs.unlink)
 Router.use(authentification)
 //get all users
 Router.get('/', async (req, res) => {
-  const users = await db.User.findAll({ include: [{model : db.Equipe , include :{model:db.Service}},{model: db.Chefs}] })
+  const users = await db.User.findAll({ include: [{model : db.Equipe , include :[{model : db.Service}]} ,{model: db.Chefs , include :[{model:db.Service}]}] })
   res.send(users)
 
 
@@ -41,13 +41,14 @@ Router.post('/', async (req, res) => {
 
 
   const { email } = req.body
-  const { pwd } = req.body
+  const pwd =  uuidv4()
+  const { domaine } = req.body
   const { level } = req.body
   const { equipe_id } = req.body  
   const { ServiceId } = req.body
 
   //check if user exists
-  const emailexist = await db.User.findOne({ where: { user_email: email } });
+  const emailexist = await db.User.findOne({ where: { user_email: email+domaine } });
   if (emailexist) return res.status(201).json({
     message: "Email exists try another one"
   })
@@ -59,13 +60,13 @@ Router.post('/', async (req, res) => {
 
   // Create new user
   const NewUser = {
-    user_email: email,
+    user_email: email+domaine,
     pwd: hashpassword,
     user_level: level,
     //  activation_code : uuidv4()
   }
 
-  
+  console.log(NewUser)
 
   if (equipe_id !== "") {
     NewUser.EquipeId = equipe_id
@@ -76,7 +77,9 @@ Router.post('/', async (req, res) => {
 
     const newuser = await db.User.create(NewUser)
       .then(async(user) => {
-        // Mailer()
+        const content = `Email : ${user.user_email}
+        password : ${pwd}`
+        Mailer("aminehaboubi00@gmail.com",content)
 
         if(level === "Chef Service"){
           const chefs = {
@@ -142,6 +145,8 @@ Router.put('/update/profile/', async (req, res) => {
     message: 'user not found'
   })
 
+  
+
   user.full_name = fullName
   user.address = address
   user.tel = tel
@@ -175,6 +180,7 @@ Router.put('/update/profileimg', upload.single("myImage"), async (req, res) => {
   const { tel } = req.body
   const { fax } = req.body
   const { website } = req.body
+  const { pwd } = req.body
 
   const url = `http://${req.hostname}:${process.env.PORT || 3001}/userimg/${req.file.filename}`
   const path = req.file.path
@@ -187,6 +193,12 @@ Router.put('/update/profileimg', upload.single("myImage"), async (req, res) => {
     await unlink(user.img_path)
   }
 
+  if (pwd != "") {
+    //Hash password
+    const salt = await bycrpt.genSalt(10);
+    const hashpassword = await bycrpt.hash(pwd, salt);
+    user.pwd = hashpassword
+  }
 
   user.full_name = fullName
   user.address = address
@@ -212,18 +224,19 @@ Router.put('/update/profileimg', upload.single("myImage"), async (req, res) => {
 })
 
 //update level
-Router.put('/level/:id', async (req, res) => {
+Router.put('/Banned/:id', async (req, res) => {
 
-  const { role } = req.body
-  const user = await db.User.findOne({ where: { user_email: email } })
+  const {Banned} = req.body
+
+  const user = await db.User.findOne({ where: { id: req.params.id } })
   if (!user) res.status(201).json({
     message: 'user not found'
   })
 
-  user.user_level = role;
+  user.banned = Banned;
   await user.save()
   res.status(200).json({
-    message: "role updated",
+    message: "Banned updated",
     user
   })
 })

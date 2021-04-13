@@ -1,43 +1,33 @@
 const nodemailer = require("nodemailer");
 
-module.exports = async ()=>{
+module.exports = async (To , content)=>{
    // Generate test SMTP service account from ethereal.email
   // Only needed if you don't have a real mail account for testing
 
- // Step 1
+
 let transporter = nodemailer.createTransport({
-    service: 'gmail',
-    host: "gmail",
+    host: 'smtp.gmail.com',
     port: 587,
-    secure: false, 
+    secure: false,
+    requireTLS: true,
     auth: {
-        user: process.env.Email,  // TODO: your gmail account
-        pass: process.env.Email_Pwd  // TODO: your gmail password
+        user: process.env.Email,
+        pass: process.env.Email_Pwd
     }
 });
 
-
-console.log(`
-email : ${process.env.Email}
-pass : ${process.env.Email_Pwd}`)
-
-// Step 2
 let mailOptions = {
     from: process.env.Email, // TODO: email sender
-    to: 'aminehaboubi00@gmail.com', // TODO: email receiver
-    subject: 'Nodemailer - Test',
-    text: 'Wooohooo it works!!'
+    to: To, // TODO: email receiver
+    subject: 'Login ',
+    text: content
 };
 
-// Step 3
-transporter.sendMail(mailOptions, (err, data) => {
-    if (err) {
-        console.log('Error occurs'+ err);
+transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+        return console.log(error.message);
     }
-    else{
-        console.log('Email sent!!!');
-    }
-   
+    console.log('success');
 });
 
 };

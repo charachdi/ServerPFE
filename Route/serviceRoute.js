@@ -31,7 +31,7 @@ Router.get("/:id", async (req, res) => {
 Router.get("/dataservice/:id", async (req, res) => {
   const service = await db.Service.findOne({
     where: { id: req.params.id },
-    include: [{ model: db.Equipe , include :[{model :db.User , include :{model : db.Equipe}} , {model : db.Service},{model : db.CompteClient , include:[{model : db.Clientimg}, {model : db.Theme},{model : db.Service},{model : db.Equipe}]}]}],
+    include: [{ model: db.Equipe , include :[{model :db.User , include :{model : db.Equipe , include : [{model : db.Service}]}} , {model : db.Service},{model : db.CompteClient , include:[{model : db.Clientimg}, {model : db.Theme},{model : db.Service},{model : db.Equipe}]}]}],
   });
   if (!service)
     res.status(201).json({
