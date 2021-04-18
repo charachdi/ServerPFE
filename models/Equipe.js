@@ -10,6 +10,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: true
       },
+      Roomid: {
+        type: DataTypes.STRING,
+        allowNull: true
+      },
     });
 
     Equipe.associate = function(models) { 
@@ -17,6 +21,7 @@ module.exports = (sequelize, DataTypes) => {
           allowNull: true
         }})
         Equipe.hasMany(models.CompteClient)
+        Equipe.hasMany(models.Files)
         Equipe.belongsTo(models.Service)
     };
    

@@ -21,6 +21,7 @@ module.exports = (sequelize, DataTypes) => {
         CompteClient.hasOne(models.Clientimg ,  { onDelete: 'cascade' })
         CompteClient.hasOne(models.Theme ,  { onDelete: 'cascade' })
         CompteClient.hasMany(models.Auth ,  { onDelete: 'cascade' })
+        CompteClient.hasMany(models.Requete ,  { onDelete: 'cascade' })
         CompteClient.belongsTo(models.Service)
         CompteClient.belongsTo(models.Equipe)
     };
