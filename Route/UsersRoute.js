@@ -45,7 +45,10 @@ Router.post('/', async (req, res) => {
   const { domaine } = req.body
   const { level } = req.body
   const { equipe_id } = req.body  
+  const { fullname } = req.body  
+
   const { ServiceId } = req.body
+  
 
   //check if user exists
   const emailexist = await db.User.findOne({ where: { user_email: email+domaine } });
@@ -61,6 +64,7 @@ Router.post('/', async (req, res) => {
   // Create new user
   const NewUser = {
     user_email: email+domaine,
+    full_name : fullname ,
     pwd: hashpassword,
     user_level: level,
     //  activation_code : uuidv4()
@@ -130,7 +134,7 @@ Router.post('/', async (req, res) => {
 Router.put('/update/profile/', async (req, res) => {
 
 
-  const { fullName } = req.body
+  
   const { address } = req.body
   const { country } = req.body
   const { sex } = req.body
@@ -147,7 +151,7 @@ Router.put('/update/profile/', async (req, res) => {
 
   
 
-  user.full_name = fullName
+  
   user.address = address
   user.tel = tel
   user.fax = fax
@@ -173,7 +177,7 @@ Router.put('/update/profile/', async (req, res) => {
 Router.put('/update/profileimg', upload.single("myImage"), async (req, res) => {
 
 
-  const { fullName } = req.body
+  
   const { address } = req.body
   const { country } = req.body
   const { sex } = req.body
@@ -200,7 +204,7 @@ Router.put('/update/profileimg', upload.single("myImage"), async (req, res) => {
     user.pwd = hashpassword
   }
 
-  user.full_name = fullName
+  
   user.address = address
   user.tel = tel
   user.fax = fax
@@ -341,7 +345,7 @@ Router.put('/update/profile/admin/:id', async (req, res) => {
 
 
   await user.save()
-  const updateduser = await db.User.findOne({ where: { id: user.id }, include: [{model : db.Equipe},{model: db.Chefs}] })
+  const updateduser = await db.User.findOne({ where: { id: user.id }, include: [{model: db.Chefs, include:{model : db.Service}},{ model: db.Equipe, include: [{ model: db.Service }, { model: db.CompteClient, include: [{ model: db.Clientimg }, { model: db.Theme }, { model: db.Auth, where: { UserId: req.userData.userId }, include: { model: db.Permission } }] }] }] })
   res.status(200).json({
     message: ' user updated',
     updateduser

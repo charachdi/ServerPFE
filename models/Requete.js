@@ -90,6 +90,7 @@ module.exports = (sequelize, DataTypes) => {
    
     Requete.associate = function(models) { 
       Requete.belongsTo(models.Files)
+      Requete.belongsTo(models.User)
   };
    
     return Requete;

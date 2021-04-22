@@ -44,7 +44,7 @@ module.exports = (sequelize, DataTypes) => {
     Files.associate = function(models) { 
         Files.belongsTo(models.Equipe)
         Files.belongsTo(models.User)
-        Files.hasMany(models.Requete)
+        Files.hasMany(models.Requete ,  { onDelete: 'cascade' })
 
     };
    

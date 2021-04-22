@@ -19,7 +19,7 @@ Router.get('/', async(req,res)=>{
 Router.get('/:id',async (req,res)=>{
 
 
-  const equipe = await db.Equipe.findOne({ where: {id : req.params.id} , include:[{model :  db.User},{model : db.Service}] });
+  const equipe = await db.Equipe.findOne({ where: {id : req.params.id} , include:[{model :  db.User},{model : db.Service}, {model : db.Files , include :[{model : db.User}]}] });
   if (!equipe) res.status(201).json({
     message : "equipe not found"
   }) 
@@ -45,6 +45,21 @@ Router.get('/:id',async (req,res)=>{
     chefE,
     collab,
   })
+})
+
+
+//get one equipe by id
+Router.get('/compte/:id',async (req,res)=>{
+
+
+  const equipe = await db.Equipe.findOne({ where: {id : req.params.id} , include:[{model : db.CompteClient , include :[{model : db.Clientimg}, {model : db.Theme},{model : db.Requete}] }] });
+  if (!equipe) res.status(201).json({
+    message : "equipe not found"
+  }) 
+  res.status(200).json({
+    clients : equipe.CompteClients
+  })
+
 })
 
 

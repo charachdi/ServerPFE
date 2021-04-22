@@ -391,7 +391,10 @@ Router.put('/update/clients/:id', upload.array('clientimg[]'),async (req,res)=>{
       console.log("1")
 
       const updateprofimg = async() =>{
-        await unlink(compteCli.Clientimg.img_profile_path)
+
+        if(compteCli.Clientimg.img_profile_path !== null){
+          await unlink(compteCli.Clientimg.img_profile_path)
+        }
       comImg.img_profile = `http://${req.hostname}:${process.env.PORT || 3001}/clientimg/${req.files[0].filename}`
       comImg.img_profile_path = req.files[0].path
       await comImg.save()
@@ -400,7 +403,11 @@ Router.put('/update/clients/:id', upload.array('clientimg[]'),async (req,res)=>{
     }
     if(req.files[1]){
       const updateprofbg = async() =>{
-        await unlink(compteCli.Clientimg.img_background_path)
+
+        if(compteCli.Clientimg.img_background_path !== null){
+          await unlink(compteCli.Clientimg.img_background_path)
+        }
+        
         comImg.img_background = `http://${req.hostname}:${process.env.PORT || 3001}/clientimg/${req.files[1].filename}`
         comImg.img_background_path = req.files[1].path
         await comImg.save()
@@ -534,6 +541,7 @@ if(req.files[0]){
   console.log("1")
 
   const updateprofimg = async() =>{
+    
     await unlink(compteCli.Clientimg.img_profile_path)
   comImg.img_profile = `http://${req.hostname}:${process.env.PORT || 3001}/clientimg/${req.files[0].filename}`
   comImg.img_profile_path = req.files[0].path
@@ -667,8 +675,8 @@ Router.delete('/:id', async (req,res)=>{
     message : 'compte client not found'
   })
 
-  await unlink(compteCli.Clientimg.img_profile_path)
-  await unlink(compteCli.Clientimg.img_background_path)
+  // await unlink(compteCli.Clientimg.img_profile_path)
+  // await unlink(compteCli.Clientimg.img_background_path)
  
 
   compteCli.destroy();
