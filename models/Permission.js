@@ -15,7 +15,7 @@ module.exports = (sequelize, DataTypes) => {
     Write : {
         type: DataTypes.STRING,
         allowNull: true,
-        defaultValue: "false",
+        defaultValue: "true",
     },
     import : {
         type: DataTypes.STRING,

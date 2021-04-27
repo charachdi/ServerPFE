@@ -37,7 +37,7 @@ Router.get("/dataservice/:id", async (req, res) => {
     res.status(201).json({
       message: "service not found",
     });
-    console.log(service)
+    
     const users = []
     const equipe = []
     const clients = []
@@ -67,6 +67,24 @@ Router.get("/dataservice/:id", async (req, res) => {
   });
 
 });
+
+
+
+Router.get("/dataservice/equipe/:id", async (req, res) => {
+  const service = await db.Service.findOne({
+    where: { id: req.params.id },
+    include: [{ model: db.Equipe , include : [{model : db.Service}]}],
+  });
+  if (!service)
+    res.status(201).json({
+      message: "service not found",
+    });
+   
+
+  res.status(200).json({
+    equipes :  service.Equipes
+  })
+})
 
 //get one service for home page
 Router.get("/dataservicecompte/:id", async (req, res) => {

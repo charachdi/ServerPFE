@@ -8,14 +8,21 @@ const fs = require("fs")
 const unlink = promisify(fs.unlink)
 
 
-// Router.use(authentification)
+Router.use(authentification)
 //get all compte client
 Router.get('/', async(req,res)=>{
- const compteCli = await db.CompteClient.findAll({include:[{model :  db.Equipe},{model : db.Service}, {model : db.Clientimg}, {model : db.Theme}]})
- res.send(compteCli)
+ const compteCli = await db.CompteClient.findAll({include:[{model : db.Requete},{model :  db.Equipe},{model : db.Service}, {model : db.Clientimg}, {model : db.Theme}]})
+ 
+ var cli = compteCli.sort(function(a, b){
+     return b.Requetes.length - a.Requetes.length
+    })
+ 
+ res.send(cli)
 
 
 })
+
+
 
 
 //get one compte client by id
@@ -30,6 +37,49 @@ Router.get('/:id',async (req,res)=>{
     compteCli
   })
 })
+
+
+//get all requetes of one client
+Router.get('/requete/:id',async (req,res)=>{
+
+  const compteCli = await db.CompteClient.findOne({ where : {id : req.params.id } , include:[{model : db.Requete , include:[{model : db.User}]}] })
+  if (!compteCli) res.status(201).json({
+    message : "compte client not found"
+  }) 
+
+  res.status(200).json({
+    compteCli
+  })
+})
+
+
+//update comptecli archive
+Router.put('/archive/:id', async (req,res)=>{
+
+  
+
+  await db.CompteClient.findOne({ where : {id : req.params.id}}).then(async (cl)=>{
+    if(!cl) res.status(201).json({
+      message : 'client not found'
+    })
+  
+   
+    cl.Archive = 1
+    await cl.save().then( async (newcl)=>{
+      await db.CompteClient.findOne({ where : {id : newcl.id } , include:[{model : db.Requete},{model :  db.Equipe , include : [{model : db.User}] },{model : db.Service}, {model : db.Clientimg}, {model : db.Theme},{model : db.Auth  , include :[{model : db.Permission},{model : db.User}]}] }).then((cli)=>{
+        res.status(200).json({
+          cli
+        })
+      })
+
+      
+    })
+  })
+  
+  
+  
+  
+  })
 
 
 // add compte client
@@ -347,7 +397,7 @@ Router.put('/update/clients/:id', upload.array('clientimg[]'),async (req,res)=>{
         const {EquipeId} = req.body
         const {description} = req.body
         const {color} = req.body
-
+        
     const compteCli = await db.CompteClient.findOne({ where : {id : req.params.id } , include:[{model :  db.Equipe },{model : db.Service}, {model : db.Clientimg}, {model : db.Theme}] })
     const auth = await db.Auth.findAll({ where : {CompteClientId : compteCli.id }})
     const equipe = await db.Equipe.findOne({ where: {id : EquipeId} , include:[{model :  db.User}] });
@@ -366,7 +416,8 @@ Router.put('/update/clients/:id', upload.array('clientimg[]'),async (req,res)=>{
     if(ServiceId !== ""){
       compteCli.ServiceId = ServiceId 
     }
-    if(EquipeId !== compteCli.EquipeId ){
+
+    if(EquipeId !== `${compteCli.EquipeId}` ){
       compteCli.EquipeId  = EquipeId
       auth.forEach(A => {
         A.destroy()
@@ -388,7 +439,7 @@ Router.put('/update/clients/:id', upload.array('clientimg[]'),async (req,res)=>{
     }
    
     if(req.files[0]){
-      console.log("1")
+      // console.log("1")
 
       const updateprofimg = async() =>{
 
@@ -412,7 +463,7 @@ Router.put('/update/clients/:id', upload.array('clientimg[]'),async (req,res)=>{
         comImg.img_background_path = req.files[1].path
         await comImg.save()
       }
-      console.log("2")
+      // console.log("2")
       updateprofbg()
     }
     
@@ -457,7 +508,7 @@ compteCli.description = description
 if(ServiceId !== ""){
 compteCli.ServiceId = ServiceId 
 }
-if(EquipeId !== compteCli.EquipeId){
+if(EquipeId !== `${compteCli.EquipeId}`){
 compteCli.EquipeId  = EquipeId
 auth.forEach(A => {
   A.destroy()
@@ -518,7 +569,7 @@ compteCli.description = description
 if(ServiceId !== ""){
   compteCli.ServiceId = ServiceId 
 }
-if(EquipeId !== compteCli.EquipeId){
+if(EquipeId !== `${compteCli.EquipeId}`){
   compteCli.EquipeId  = EquipeId
   auth.forEach(A => {
     A.destroy()
@@ -605,7 +656,7 @@ compteCli.description = description
 if(ServiceId !== ""){
   compteCli.ServiceId = ServiceId 
 }
-if(EquipeId !== compteCli.EquipeId){
+if(EquipeId !== `${compteCli.EquipeId}`){
   compteCli.EquipeId  = EquipeId
   auth.forEach(A => {
     A.destroy()

@@ -48,6 +48,7 @@ const serviceRoute = require('./Route/serviceRoute')
 const compteCliRoute = require('./Route/compteCliRoute')
 const PermissionRoute = require('./Route/PermissionRoute')
 const ImportRoute = require('./Route/ImportRoute')
+const StatRoute = require('./Route/StatRoute')
 
 
 app.use('/user',userRouter)
@@ -57,6 +58,7 @@ app.use('/service',serviceRoute)
 app.use('/clients',compteCliRoute)
 app.use('/permission',PermissionRoute)
 app.use('/Import',ImportRoute)
+app.use('/stat',StatRoute)
 
 
 // connection()

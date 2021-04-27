@@ -12,12 +12,11 @@ const fs = require("fs")
 const unlink = promisify(fs.unlink)
 
 Router.use(authentification)
+
 //get all users
 Router.get('/', async (req, res) => {
   const users = await db.User.findAll({ include: [{model : db.Equipe , include :[{model : db.Service}]} ,{model: db.Chefs , include :[{model:db.Service}]}] })
   res.send(users)
-
-
 })
 
 
@@ -25,7 +24,7 @@ Router.get('/', async (req, res) => {
 Router.get('/:id', async (req, res) => {
 
 
-  const user = await db.User.findOne({ where: { id: req.params.id }, include: [{model: db.Chefs, include:{model : db.Service}},{ model: db.Equipe, include: [{ model: db.Service }, { model: db.CompteClient, include: [{ model: db.Clientimg }, { model: db.Theme }, { model: db.Auth, where: { UserId: req.userData.userId }, include: { model: db.Permission } }] }] }] });
+  const user = await db.User.findOne({ where: { id: req.params.id }, include: [{model: db.Chefs, include:{model : db.Service}},{ model: db.Equipe, include: [{ model: db.Service }, { model: db.CompteClient, include: [{model : db.Requete , where : {UserId : req.params.id}},{ model: db.Clientimg }, { model: db.Theme }, { model: db.Auth, where: { UserId: req.userData.userId }, include: { model: db.Permission } }] }] }] });
   console.log(user)
   if (!user) res.status(201).json({
     message: "user not found"
@@ -35,6 +34,22 @@ Router.get('/:id', async (req, res) => {
   })
 })
 
+//get user equipe client
+Router.get('/equipecli/:id', async (req, res) => {
+
+
+  const user = await db.User.findOne({ where: { id: req.params.id }, include: [{ model: db.Equipe, include: [{ model: db.Service }, { model: db.CompteClient, include: [{model : db.Requete , where : {UserId : req.params.id}},{ model: db.Clientimg }, { model: db.Theme }, { model: db.Auth, where: { UserId: req.userData.userId }, include: { model: db.Permission } }] }] }] });
+  if (!user) res.status(201).json({
+    message: "user not found"
+  })
+
+
+  res.status(200).json({
+    clients : user.Equipe.CompteClients.sort(function(a, b){return b.Requetes.length - a.Requetes.length})
+  
+  })
+})
+// cli.sort(function(a, b){return b.Requetes.length - a.Requetes.length})
 
 // add user
 Router.post('/', async (req, res) => {
@@ -193,16 +208,16 @@ Router.put('/update/profileimg', upload.single("myImage"), async (req, res) => {
   if (!user) res.status(201).json({
     message: 'user not found'
   })
-  if (user.img_path != null) {
-    await unlink(user.img_path)
-  }
+  // if (user.img_path != null) {
+  //   await unlink(user.img_path)
+  // }
 
-  if (pwd != "") {
-    //Hash password
-    const salt = await bycrpt.genSalt(10);
-    const hashpassword = await bycrpt.hash(pwd, salt);
-    user.pwd = hashpassword
-  }
+  // if (pwd != "") {
+  //   //Hash password
+  //   const salt = await bycrpt.genSalt(10);
+  //   const hashpassword = await bycrpt.hash(pwd, salt);
+  //   user.pwd = hashpassword
+  // }
 
   
   user.address = address

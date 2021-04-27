@@ -22,6 +22,7 @@ module.exports = (sequelize, DataTypes) => {
         }})
         Equipe.hasMany(models.CompteClient)
         Equipe.hasMany(models.Files)
+        Equipe.hasOne(models.Archive)
         Equipe.belongsTo(models.Service)
     };
    
