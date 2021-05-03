@@ -2,7 +2,7 @@ const express = require('express')
 const Router = express.Router()
 const db = require("../models");
 const Op = require('sequelize').Op
-
+const { v4: uuidv4 } = require('uuid');
 
 //get all equipes
 Router.get('/', async(req,res)=>{
@@ -96,6 +96,8 @@ Router.post('/',async (req,res)=>{
       const NewEquipe = {
         Nom_equipe : nomEquipe,
         ServiceId : ServiceID,
+        Roomid : uuidv4()
+
         
          }
 

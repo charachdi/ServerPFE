@@ -1,6 +1,7 @@
 const express = require("express");
 const Router = express.Router();
 const db = require("../models");
+const { v4: uuidv4 } = require('uuid');
 
 //get all service
 Router.get("/", async (req, res) => {
@@ -114,6 +115,7 @@ Router.post("/", async (req, res) => {
   // Create new service
   const NewService = {
     Nom_service: nomService,
+    Roomid : uuidv4()
   };
 
   // saving the new service

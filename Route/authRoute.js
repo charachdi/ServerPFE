@@ -10,7 +10,7 @@ Router.post("/login", async (req, res) => {
   const {pwd} = req.body
 
   //check if user exists
-const user = await db.User.findOne({ where: {user_email : email}, include: [{ model: db.Equipe, include: [{ model: db.Service }, { model: db.CompteClient, include: [{ model: db.Clientimg }, { model: db.Theme }] }] }]});
+const user = await db.User.findOne({ where: {user_email : email}, include: [{model: db.Chefs, include:{model : db.Service}},{ model: db.Equipe, include: [{ model: db.Service }, { model: db.CompteClient }] }]});
 if (!user) return res.status(201).json({
     message : "email incorrect"
 })
