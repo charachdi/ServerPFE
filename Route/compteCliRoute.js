@@ -6,6 +6,7 @@ const authentification = require('./../midellware/authentification')
 const { promisify } = require('util')
 const fs = require("fs")
 const unlink = promisify(fs.unlink)
+const {AdminNotif} = require('./../Socket/socket')
 
 
 Router.use(authentification)
@@ -42,7 +43,7 @@ Router.get('/:id',async (req,res)=>{
 //get all requetes of one client
 Router.get('/requete/:id',async (req,res)=>{
 
-  const compteCli = await db.CompteClient.findOne({ where : {id : req.params.id } , include:[{model : db.Requete , include:[{model : db.User}]}] })
+  const compteCli = await db.CompteClient.findOne({ where : {id : req.params.id } , include:[{model : db.Requete , include:[{model : db.Modirequete},{model : db.User}]}] })
   if (!compteCli) res.status(201).json({
     message : "compte client not found"
   }) 
@@ -51,6 +52,123 @@ Router.get('/requete/:id',async (req,res)=>{
     compteCli
   })
 })
+
+//get all Historique of one client
+Router.get('/Historique/:id',async (req,res)=>{
+
+  const compteCli = await db.CompteClient.findOne({ where : {id : req.params.id } , include:[{model : db.Historique , include:[{model : db.User},{model : db.Requete , include:[{model : db.Modirequete}]}]}] })
+  if (!compteCli) res.status(201).json({
+    message : "compte client not found"
+  }) 
+
+  res.status(200).json({
+    Historique : compteCli.Historiques.reverse()
+  })
+})
+
+//get all requetes of one collab
+Router.get('/requete/collab/:id',async (req,res)=>{
+
+  const compteCli = await db.CompteClient.findOne({ where : {id : req.params.id } , include:[{model : db.Requete , where : { UserId : req.userData.userId} , include:[{model : db.User}]}] })
+  if (!compteCli) res.status(201).json({
+    message : "compte client not found"
+  }) 
+
+  res.status(200).json({
+    compteCli
+  })
+})
+
+  //update comptecli requete
+  Router.put('/requete/:id', async (req,res)=>{
+
+  
+
+    await db.Requete.findOne({ where : {id : req.params.id } , include:[{model : db.Modirequete},{model : db.User},{model : db.CompteClient , include : [{model : db.Service}]}] }).then(async (requete)=>{
+      if(!requete) res.status(201).json({
+        message : 'requete not found'
+      })
+
+      if(requete.Modirequete){
+
+        await db.Modirequete.findOne({where : {RequeteId : requete.id}}).then((modif)=>{
+
+          modif.Proprietaire_de_la_requete = requete.Proprietaire_de_la_requete,
+          modif.Statut =  requete.Statut,
+          modif.Origine_de_la_requete =  requete.Origine_de_la_requete,
+          modif.Heure_douverture =  requete.Heure_douverture,
+          modif.Heure_de_fermeture =  requete.Heure_de_fermeture,
+          modif.Objet =  requete.Objet,
+          modif.Numero_de_la_requete =  requete.Numero_de_la_requete,
+          modif.Motifs_de_resiliation =  requete.Motifs_de_resiliation,
+          modif.date_ouverture =  requete.date_ouverture,
+          modif.date_de_fermeture =  requete.date_de_fermeture,
+          modif.Famille_de_demande_RC =  requete.Famille_de_demande_RC,
+          modif.Type_de_la_demande_RC =  requete.Type_de_la_demande_RC,
+          modif.Raison_sociale_du_compte =  requete.Raison_sociale_du_compte,
+          modif.Anciennete =  requete.Anciennete
+        })
+
+      }else{
+        await db.Modirequete.create({
+                Proprietaire_de_la_requete: requete.Proprietaire_de_la_requete,
+                Statut:  requete.Statut,
+                Origine_de_la_requete:  requete.Origine_de_la_requete,
+                Heure_douverture:  requete.Heure_douverture,
+                Heure_de_fermeture:  requete.Heure_de_fermeture,
+                Objet:  requete.Objet,
+                Numero_de_la_requete:  requete.Numero_de_la_requete,
+                Motifs_de_resiliation:  requete.Motifs_de_resiliation,
+                date_ouverture:  requete.date_ouverture,
+                date_de_fermeture:  requete.date_de_fermeture,
+                Famille_de_demande_RC:  requete.Famille_de_demande_RC,
+                Type_de_la_demande_RC:  requete.Type_de_la_demande_RC,
+                Raison_sociale_du_compte:  requete.Raison_sociale_du_compte,
+                Anciennete:  requete.Anciennete,
+                CompteClientId: 5,
+                FileId: 1,
+                UserId: 6,
+                RequeteId : requete.id
+        })
+      }
+      requete.Statut = req.body.Statut
+      requete.Origine_de_la_requete = req.body.Origine_de_la_requete
+      requete.Motifs_de_resiliation = req.body.Motifs_de_resiliation
+      requete.Heure_de_fermeture = req.body.Heure_de_fermeture
+      requete.Famille_de_demande_RC = req.body.Famille_de_demande_RC
+
+      await requete.save().then( async (updatedreq)=>{
+       const His = {
+        CompteClientId :updatedreq.CompteClientId, 
+        UserId : req.userData.userId,
+        RequeteId	: updatedreq.id,
+       }
+       await db.Historique.create(His)
+       AdminNotif(updatedreq , updatedreq.CompteClient.Service.Roomid)
+        res.status(200).json({
+          requete :updatedreq
+        })
+       
+      })
+    
+      
+    })
+    
+    })
+
+    Router.post('/add/requete' , async (req,res)=>{
+
+
+      await db.Requete.create(req.body).then( async (reqe)=>{
+        await db.Requete.findOne({ where : {id : reqe.id } , include:[{model : db.Modirequete},{model : db.User}] }).then((result)=>{
+          res.status(200).json({
+            req : result
+          })
+        })
+        
+      })
+      
+    })
 
 
 //update comptecli archive
@@ -66,7 +184,8 @@ Router.put('/archive/:id', async (req,res)=>{
    
     cl.Archive = 1
     await cl.save().then( async (newcl)=>{
-      await db.CompteClient.findOne({ where : {id : newcl.id } , include:[{model : db.Requete},{model :  db.Equipe , include : [{model : db.User}] },{model : db.Service}, {model : db.Clientimg}, {model : db.Theme},{model : db.Auth  , include :[{model : db.Permission},{model : db.User}]}] }).then((cli)=>{
+     
+      await db.CompteClient.findOne({ where : {id : newcl.id } , include:[{model : db.Requete}, {model : db.Clientimg}, {model : db.Theme}] }).then((cli)=>{
         res.status(200).json({
           cli
         })
@@ -80,6 +199,9 @@ Router.put('/archive/:id', async (req,res)=>{
   
   
   })
+
+
+
 
 
 // add compte client

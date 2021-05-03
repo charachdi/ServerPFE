@@ -117,6 +117,7 @@ module.exports = (sequelize, DataTypes) => {
       User.hasMany(models.Requete)
       User.hasOne(models.Chefs ,  { onDelete: 'cascade'})
       User.hasMany(models.Files)
+      User.hasMany(models.Historique ,  { onDelete: 'cascade'})
       
     };
    

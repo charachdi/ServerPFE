@@ -49,7 +49,7 @@ Router.get('/equipecli/:id', async (req, res) => {
   
   })
 })
-// cli.sort(function(a, b){return b.Requetes.length - a.Requetes.length})
+
 
 // add user
 Router.post('/', async (req, res) => {
@@ -158,7 +158,7 @@ Router.put('/update/profile/', async (req, res) => {
   const { website } = req.body
 
 
-  console.log(req.userData.userId)
+
   const user = await db.User.findOne({ where: { id: req.userData.userId } })
   if (!user) res.status(201).json({
     message: 'user not found'
@@ -386,5 +386,113 @@ Router.delete('/user/:id', async (req, res) => {
 
 
 
+
+Router.get('/stat/line/:id', async (req, res)=>{
+
+  function onlyUnique(value, index, self) {
+    return self.indexOf(value) === index;
+  }
+  var date  = []
+  var date_value = []
+
+  await db.Requete.findAll({where : { UserId : req.params.id}}).then((reqs)=>{
+    
+   
+    reqs.forEach(req => {
+      date.push(req.Heure_douverture.split(" ")[0])
+  });
+
+    var Trim_date = date.filter(onlyUnique);
+    Trim_date.forEach(newdate => {
+      const result = reqs.filter(req => req.Heure_douverture.split(" ")[0] === newdate);
+      date_value.push(result.length)
+  });
+     
+    res.status(200).json({
+      date : Trim_date,
+      value : date_value
+    })
+  })
+})
+
+Router.get('/stat/pie/:id', async (req, res)=>{
+  const Clients = []
+  const Requetes = []
+   
+    await db.User.findOne({ where : { id :req.params.id } , include : [{model : db.Equipe , include: [{model :db.CompteClient , where : { Archive : 0} , include : [{model : db.Requete , where : { UserId : req.params.id}}]}]}]}).then((user)=>{
+     
+      user.Equipe.CompteClients.forEach(cli => {
+       Clients.push(cli.Nom_compteCli)
+       Requetes.push(cli.Requetes.length)
+     });
+     
+     
+      res.status(200).json({
+       client :  Clients.slice(0, 5),
+       value : Requetes.slice(0, 5)
+      })
+    })
+})
+
+Router.get('/stat/clients/:id' ,async (req,res)=>{
+
+  const Clients = []
+  // const result = compteClient.Requetes.filter(req => req.UserId === id);
+
+  await db.User.findOne({ where : { id :req.params.id } , include : [{model : db.Equipe , include: [{model :db.CompteClient , where : {Archive : 0 } , include : [{model : db.Requete , where : { UserId : req.params.id}} , {model : db.Theme},{model : db.Clientimg}]}]}]}).then((user)=>{
+     
+    user.Equipe.CompteClients.forEach(cli => {
+
+      const data = {
+        client : cli.Nom_compteCli,
+        profile : cli.Clientimg.img_profile,
+        background : cli.Clientimg.img_background,
+        color : cli.Theme.Color,
+        total_Requetes : cli.Requetes.length,
+        ok :  cli.Requetes.filter(req => req.Statut === "Clôturé").length ,
+        ko : cli.Requetes.filter(req => req.Statut !== "Clôturé").length,
+        prog_value : ((cli.Requetes.filter(req => req.Statut === "Clôturé").length /cli.Requetes.length )*100).toFixed(0),
+      }
+
+   
+     Clients.push(data)
+    
+   });
+   
+   const Sorted =  Clients.sort(function(a, b){return b.ok - a.ok})
+    res.status(200).json({
+      Clients :  Sorted
+    })
+  })
+})
+
+Router.get('/stat/bar/:id' ,async (req,res)=>{
+
+  const Origine = []
+  const origine_value = []
+  // const result = compteClient.Requetes.filter(req => req.UserId === id);
+  function onlyUnique(value, index, self) {
+    return self.indexOf(value) === index;
+  }
+
+
+  await db.User.findOne({ where : { id :req.params.id } , include : [{model : db.Requete}]}).then((user)=>{
+    user.Requetes.forEach(req => {
+        Origine.push(req.Origine_de_la_requete)
+     });
+
+     var Trim_Origine = Origine.filter(onlyUnique);
+     Trim_Origine.forEach(orig => {
+      const result = user.Requetes.filter(req => req.Origine_de_la_requete === orig);
+      origine_value.push(result.length)
+     });
+
+
+    res.status(200).json({
+      Origine : Trim_Origine , 
+      value : origine_value
+    })
+  })
+})
 
 module.exports = Router;

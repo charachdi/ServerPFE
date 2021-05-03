@@ -1,5 +1,5 @@
 module.exports = (sequelize, DataTypes) => {
-    const Requete  = sequelize.define("Requete", {
+    const Modirequete  = sequelize.define("Modirequete", {
     id:{
         allowNull: false,
         autoIncrement: true,
@@ -88,12 +88,12 @@ module.exports = (sequelize, DataTypes) => {
     });
 
    
-    Requete.associate = function(models) { 
-      Requete.belongsTo(models.Files)
-      Requete.belongsTo(models.CompteClient)
-      Requete.belongsTo(models.User)
-      Requete.hasOne(models.Modirequete)
+    Modirequete.associate = function(models) { 
+        Modirequete.belongsTo(models.Files)
+        Modirequete.belongsTo(models.User)
+        Modirequete.belongsTo(models.CompteClient)
+        Modirequete.belongsTo(models.Requete)
   };
    
-    return Requete;
+    return Modirequete;
   };
