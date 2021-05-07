@@ -50,7 +50,6 @@ Router.get('/equipecli/:id', async (req, res) => {
   })
 })
 
-
 // add user
 Router.post('/', async (req, res) => {
 
@@ -143,8 +142,6 @@ Router.post('/', async (req, res) => {
 
 
 })
-
-
 
 Router.put('/update/profile/', async (req, res) => {
 
@@ -278,9 +275,6 @@ Router.put('/auth/:id', async (req, res) => {
   })
 })
 
-
-
-
 //admin update 
 //update user
 Router.put('/update/profile/admin/:id', async (req, res) => {
@@ -383,9 +377,6 @@ Router.delete('/user/:id', async (req, res) => {
     user
   })
 })
-
-
-
 
 Router.get('/stat/line/:id', async (req, res)=>{
 
@@ -494,5 +485,17 @@ Router.get('/stat/bar/:id' ,async (req,res)=>{
     })
   })
 })
+
+Router.get('/Requete/false/:id' ,async (req,res)=>{
+
+  await db.Requete.findAll({ where : { UserId : req.params.id, Check : 0 } , include : {model :  db.User}}).then(listreq =>{
+    res.status(200).json({
+      listreq,
+      Count : listreq.length
+    })
+  })
+
+})
+
 
 module.exports = Router;

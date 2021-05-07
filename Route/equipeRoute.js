@@ -48,6 +48,7 @@ Router.get('/:id',async (req,res)=>{
     equipe,
     chefE,
     collab,
+    
   })
 })
 

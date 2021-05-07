@@ -41,12 +41,8 @@ const AdminNotif = (req , Roomid) =>{
         if(data[i].Name){
           await db.User.findOne({ where: { full_name: data[i].Name }}).then(async (user)=>{
             if(user){
-              if(data[i].Raison !== ""){
-                await db.CompteClient.findOne({ where : { Nom_compteCli : { [ Op.like]: `%${data[i].Raison.split(" ")[0]}%`  } , EquipeId : body.EquipeId } }).then(async (cli)=>{
-                  if(cli){
-                    
 
-                         const newrequete = {
+              const newrequete = {
                           Proprietaire_de_la_requete : data[i].Name,
                           Statut : data[i].status,
                           Origine_de_la_requete : data[i].origin,
@@ -66,21 +62,49 @@ const AdminNotif = (req , Roomid) =>{
                           Type_de_la_demande_RC: data[i].typeRC,
                           Raison_sociale_du_compte: data[i].Raison,
                           Anciennete : data[i].Anicennete,
-                          CompteClientId: cli.id,
+                          CompteClientId: 0,
                           UserId: user.id,
-                          FileId : body.Fileid
+                          FileId : body.Fileid,
+                          Check : 1
                         }
-                        await db.Requete.create(newrequete).then(()=>{
+                        // RequeteCkeck
+                        const Reqcheck = {
+                          Compteclinamecheck : 0,
+                          Statuscheck : 0,
+                          Originecheck : 0,
+                          RequeteId	: 0
+                        }
+
+              if(data[i].Raison === ""){
+                newrequete.Check = 0
+                Reqcheck.Compteclinamecheck = 1
+              }
+              if(data[i].status === ""){
+                newrequete.Check = 0
+                Reqcheck.Statuscheck = 1
+              }
+              if(data[i].origin === ""){
+                newrequete.Check = 0
+                Reqcheck.Originecheck = 1
+              }
+
+
+              if(data[i].Raison !== ""){
+                await db.CompteClient.findOne({ where : { Nom_compteCli : { [ Op.like]: `%${data[i].Raison.split(" ")[0]}%`  } , EquipeId : body.EquipeId } }).then(async (cli)=>{
+                  if(cli){
+                        newrequete.CompteClientId = cli.id
+                        await db.Requete.create(newrequete).then(async(req)=>{
+                          Reqcheck.RequeteId = req.id
+                          await db.RequeteCkeck.create(Reqcheck)
                           if(upload.toFixed(0) === `${num_to_check}` ){
                             server.io.emit(`${body.Roomid}`, {value : upload.toFixed(0) , Rid : body.Roomid});
                             num_to_check = num_to_check + 10
                           }
                         })
-                    
-                  }else{
-                   
-                    
-                           // Create new compte client
+
+                      }else{
+
+                                      // Create new compte client
                       const NewCompteCli = {
                         Nom_compteCli : data[i].Raison,
                         ServiceId :body.ServiceId ,
@@ -96,51 +120,25 @@ const AdminNotif = (req , Roomid) =>{
                           CompteClientId : ""
                         }
   
-  
-                      //  // saving the new compte client  
-                      try {
-  
+                        try {
+                        // saving the new compte client  
+                     
+                        
                       const savedcompte =  await  db.CompteClient.create(NewCompteCli)
                       Newclientimg.CompteClientId = savedcompte.id
                       newtheme.CompteClientId = savedcompte.id
 
-                      
+                      newrequete.CompteClientId = savedcompte.id
+                      await db.Requete.create(newrequete).then(async(req)=>{
+                        Reqcheck.RequeteId = req.id
+                        await db.RequeteCkeck.create(Reqcheck)
+                        if(upload.toFixed(0) === `${num_to_check}` ){
+                          server.io.emit(`${body.Roomid}`, {value : upload.toFixed(0) , Rid : body.Roomid});
+                          num_to_check = num_to_check + 10
+                        }
+                      })
 
-                           const newrequete = {
-                            Proprietaire_de_la_requete : data[i].Name,
-                            Statut : data[i].status,
-                            Origine_de_la_requete : data[i].origin,
-                            Heure_douverture: data[i].Houverture,
-                            heure_de_derniere_modification_de_la_requete : data[i].modification,
-                            Heure_de_fermeture : data[i].Hfermeture,
-                            Objet: data[i].objet,
-                            Numero_de_la_requete: data[i].numero,
-                            Type_de_la_demande: data[i].type,
-                            Famille_de_demande: data[i].famille,
-                            Motifs_de_resiliation: data[i].Motifs,
-                            Sous_motif_de_resiliation: data[i].sousmotif,
-                            Autre_motif_de_resiliation: data[i].autremotif,
-                            date_ouverture: data[i].ouverture,
-                            date_de_fermeture: data[i].fermeture,
-                            Famille_de_demande_RC: data[i].familleRC,
-                            Type_de_la_demande_RC: data[i].typeRC,
-                            Raison_sociale_du_compte: data[i].Raison,
-                            Anciennete : data[i].Anicennete,
-                            CompteClientId: savedcompte.id,
-                            UserId: user.id,
-                            FileId : body.Fileid
-                          }
-      
-    
-    
-                          await db.Requete.create(newrequete).then(()=>{
-                            if(upload.toFixed(0) === `${num_to_check}` ){
-                              server.io.emit(`${body.Roomid}`, {value : upload.toFixed(0) , Rid : body.Roomid});
-                              num_to_check = num_to_check + 10
-                            }
-                          })
-                      
-                      // auth and permission
+                             // auth and permission
                       const equipe = await db.Equipe.findOne({ where: {id : body.EquipeId} , include:[{model :  db.User}] });
   
   
@@ -164,13 +162,29 @@ const AdminNotif = (req , Roomid) =>{
                       } catch (error) {
                       console.log(error)
                       }
+
+                      }
+
+                    })
+              }else if(newrequete.Check === 0){
+                newrequete.CompteClientId	= null
+                await db.Requete.create(newrequete).then(async (req)=>{
+                  Reqcheck.RequeteId = req.id
+                  await db.RequeteCkeck.create(Reqcheck)
+                  if(upload.toFixed(0) === `${num_to_check}` ){
+                    server.io.emit(`${body.Roomid}`, {value : upload.toFixed(0) , Rid : body.Roomid});
+                    num_to_check = num_to_check + 10
                   }
                 })
-                .catch((err)=>{
-                  console.log(err)
-                })
-                
               }
+                
+               
+                    
+                
+                   
+                    
+            
+              
             }
           })
         }

@@ -23,11 +23,11 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: true
       },
       heure_de_derniere_modification_de_la_requete: {
-        type: DataTypes.DATE                        ,
+        type: DataTypes.DATE,
         allowNull: true
       },
       Heure_de_fermeture: {
-        type: DataTypes.DATE                        ,
+        type: DataTypes.DATE,
         allowNull: true
       },
       Objet: {
@@ -59,11 +59,11 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: true
       },
       date_ouverture: {
-        type: DataTypes.DATE                        ,
+        type: DataTypes.DATE,
         allowNull: true
       },
       date_de_fermeture	: {
-        type: DataTypes.DATE                        ,
+        type: DataTypes.DATE,
         allowNull: true
       },
       Famille_de_demande_RC	: {
@@ -82,6 +82,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: true
       },
+      Check: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false
+      },
 
 
       
@@ -89,10 +93,12 @@ module.exports = (sequelize, DataTypes) => {
 
    
     Requete.associate = function(models) { 
-      Requete.belongsTo(models.Files)
-      Requete.belongsTo(models.CompteClient)
+      Requete.belongsTo(models.Files) 
+      Requete.belongsTo(models.CompteClient ,
+        {foreignKey: { allowNull: true }})
       Requete.belongsTo(models.User)
-      Requete.hasOne(models.Modirequete)
+      Requete.hasOne(models.Modirequete ,  { onDelete: 'cascade' })
+      Requete.hasOne(models.RequeteCkeck ,  { onDelete: 'cascade' })
   };
    
     return Requete;
