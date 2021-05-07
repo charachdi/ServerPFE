@@ -7,6 +7,7 @@ const { promisify } = require('util')
 const fs = require("fs")
 const unlink = promisify(fs.unlink)
 const {AdminNotif} = require('./../Socket/socket')
+const Op = require('sequelize').Op
 
 
 Router.use(authentification)
@@ -22,8 +23,6 @@ Router.get('/', async(req,res)=>{
 
 
 })
-
-
 
 
 //get one compte client by id
@@ -126,8 +125,8 @@ Router.get('/requete/collab/:id',async (req,res)=>{
                 Raison_sociale_du_compte:  requete.Raison_sociale_du_compte,
                 Anciennete:  requete.Anciennete,
                 CompteClientId: 5,
-                FileId: 1,
-                UserId: 6,
+                FileId: requete.FileId,
+                UserId:  req.userData.userId,
                 RequeteId : requete.id
         })
       }
@@ -200,6 +199,133 @@ Router.put('/archive/:id', async (req,res)=>{
   
   })
 
+
+Router.put('/Requete/update/false',async(req,res)=>{
+
+ const {Comptecli} = req.body
+ const {Famille_de_demande_RC} = req.body
+ const {Heure_de_fermeture} = req.body
+ const {Motifs_de_resiliation} = req.body
+ const {Origine_de_la_requete} = req.body
+ const {Statut} = req.body
+ const {comptecliid} = req.body
+ const {Type_de_la_demande_RC} = req.body
+ const {id} = req.body
+  
+
+ 
+    // "Statut": "En cours",
+    // "Origine_de_la_requete": "Adresse e-mail",
+    // "Motifs_de_resiliation": "azeae",
+    // "Heure_de_fermeture": "2021-05-07T03:49",
+    // "Famille_de_demande_RC": "azeaze",
+    // "Comptecli": "aeazea"
+
+    // await db.CompteClient.findOne({ where :{ id : }})
+    const user = await db.User.findOne({ where: { id: req.userData.userId } , include : [{model : db.Equipe , include : [{model : db.Service}]}]})
+
+    await db.Requete.findOne({ where : { id: id}}).then( async (reque)=>{
+      if(!comptecliid && Comptecli !== ""){
+        await db.CompteClient.findOne({ where : { Nom_compteCli : { [ Op.like]: `%${Comptecli.split(" ")[0]}%`  }} }).then(async (cli)=>{
+          if(cli){
+
+            reque.CompteClientId = cli.id
+            reque.Statut = Statut
+            reque.Famille_de_demande_RC = Famille_de_demande_RC
+            reque.Heure_de_fermeture = Heure_de_fermeture
+            reque.Motifs_de_resiliation = Motifs_de_resiliation
+            reque.Origine_de_la_requete = Origine_de_la_requete
+            reque.Raison_sociale_du_compte = cli.Nom_compteCli
+            reque.Type_de_la_demande_RC = Type_de_la_demande_RC
+            reque.Check = 1
+            await reque.save().then( async ()=>{
+              await db.Requete.findOne({ where : { id: id}}).then( async (updatedreq)=>{
+                res.status(200).json({
+                  updatedreq
+                })
+              })
+
+            })
+          }else{
+
+            const NewCompteCli = {
+              Nom_compteCli : Comptecli,
+              ServiceId :user.Equipe.Service.id ,
+              EquipeId :user.Equipe.id 
+            }
+
+              const Newclientimg = {
+                CompteClientId : ""
+              }
+
+              const newtheme = {
+                Color : "#000000",
+                CompteClientId : ""
+              }
+
+              try {
+              // saving the new compte client  
+           
+              
+            const savedcompte =  await  db.CompteClient.create(NewCompteCli)
+            Newclientimg.CompteClientId = savedcompte.id
+            newtheme.CompteClientId = savedcompte.id
+
+
+            reque.CompteClientId = savedcompte.id
+            reque.Statut = Statut
+            reque.Famille_de_demande_RC = Famille_de_demande_RC
+            reque.Heure_de_fermeture = Heure_de_fermeture
+            reque.Motifs_de_resiliation = Motifs_de_resiliation
+            reque.Origine_de_la_requete = Origine_de_la_requete
+            reque.Raison_sociale_du_compte = savedcompte.Nom_compteCli
+            reque.Type_de_la_demande_RC = Type_de_la_demande_RC
+            reque.Check = 1
+            await reque.save().then( async ()=>{
+              await db.Requete.findOne({ where : { id: id}}).then( async (updatedreq)=>{
+                res.status(200).json({
+                  updatedreq
+                })
+              })
+
+            })
+
+                   // auth and permission
+            const equipe = await db.Equipe.findOne({ where: {id : user.Equipe.id} , include:[{model :  db.User}] });
+
+
+            equipe.Users.forEach(async(user) => {
+            const newAuth = {
+            UserId :user.id ,
+            CompteClientId : savedcompte.id
+            }
+            const savedauth = await db.Auth.create(newAuth)
+
+            const newpermission = {
+            AuthId : savedauth.id
+            }
+            await db.Permission.create(newpermission)
+            });
+
+            await db.Theme.create(newtheme)
+            await  db.Clientimg.create(Newclientimg)
+            } catch (error) {
+            console.log(error)
+            }
+          }
+    
+        })
+    
+    
+      }else{
+        res.status(201).json({
+          message : "error"
+        })
+      }
+    })
+  
+
+})
 
 
 
