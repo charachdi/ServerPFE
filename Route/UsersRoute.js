@@ -130,9 +130,10 @@ Router.post('/', async (req, res) => {
           await db.Permission.create(newpermission)
           });
         }
+        const uuser = await db.User.findOne({ where: { id: user.id }, include: [{model: db.Chefs, include:{model : db.Service}},{ model: db.Equipe, include: [{ model: db.Service } ] }]})
         res.status(200).json({
           message: "user added",
-          user,
+          uuser,
         })
       })
   } catch (error) {

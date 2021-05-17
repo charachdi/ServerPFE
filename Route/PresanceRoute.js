@@ -3,6 +3,9 @@ const Router = express.Router()
 const db = require("../models");
 const Op = require('sequelize').Op
 const { v4: uuidv4 } = require('uuid');
+const Moment = require('moment');
+const MomentRange = require('moment-range');
+const moment = MomentRange.extendMoment(Moment);
 
 
 Router.get('/user/attend/', async (req , res)=>{
@@ -14,15 +17,17 @@ Router.get('/user/attend/', async (req , res)=>{
     var Retard = 0
 
 
-    await db.User.findAll({ where : { user_level : ['Collaborateur','Chef equipe']}, include : { model : db.Presance , limit: 1 ,  order: [['date','DESC']]}}).then((user)=>{
+    await db.User.findAll({ where : { user_level : ['Collaborateur','Chef equipe']}, include : { model : db.Presance , limit : 1 ,order: [['date','DESC']] , where : { date : new Date().toLocaleDateString("en-US") }}}).then((user)=>{
        
-        user.forEach(u => {
+    //     user.forEach(u => {
 
-            if(u.Presances[0].Present){Present++}
-            if(u.Presances[0].Absent){Absent++}
-            if(u.Presances[0].Conge){Conge++}
-            if(u.Presances[0].Retard){Retard++}
-       });
+    //         if(u.Presances[0].Present){Present++}
+    //         if(u.Presances[0].Absent){Absent++}
+    //         if(u.Presances[0].Conge){Conge++}
+    //         if(u.Presances[0].Retard){Retard++}
+    //    });
+
+   
        
         res.status(200).json({
             user,

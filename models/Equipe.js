@@ -14,6 +14,16 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: true
       },
+     Prime: {
+        type: DataTypes.FLOAT,
+        defaultValue: 0,
+        allowNull: true
+      },
+      bonus: {
+        type: DataTypes.FLOAT,
+        defaultValue: 120,
+        allowNull: true
+      },
     });
 
     Equipe.associate = function(models) { 

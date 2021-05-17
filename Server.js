@@ -19,7 +19,6 @@ app.use(express.json());
 app.use(morgan('dev'))
 dotenv.config();
 app.use(cors())
-
 db.sequelize.sync()
 
 const server = http.createServer(app);
@@ -44,6 +43,8 @@ const compteCliRoute = require('./Route/compteCliRoute')
 const PermissionRoute = require('./Route/PermissionRoute')
 const ImportRoute = require('./Route/ImportRoute')
 const StatRoute = require('./Route/StatRoute')
+const DemandeRoute = require('./Route/DemandeRoute')
+const AdminRoute = require('./Route/AdminRoute')
 
 
 app.use('/user',userRouter)
@@ -55,6 +56,8 @@ app.use('/permission',PermissionRoute)
 app.use('/Presance',PresanceRoute)
 app.use('/Import',ImportRoute)
 app.use('/stat',StatRoute)
+app.use('/Demande',DemandeRoute)
+app.use('/admin',AdminRoute)
 
 
 // connection()

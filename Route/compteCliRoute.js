@@ -8,6 +8,7 @@ const fs = require("fs")
 const unlink = promisify(fs.unlink)
 const {AdminNotif} = require('./../Socket/socket')
 const Op = require('sequelize').Op
+const Ar = require('./../midellware/Archivage')
 
 
 Router.use(authentification)
@@ -188,6 +189,8 @@ Router.put('/archive/:id', async (req,res)=>{
         res.status(200).json({
           cli
         })
+
+        Ar(cli)
       })
 
       
