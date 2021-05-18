@@ -498,5 +498,10 @@ Router.get('/Requete/false/:id' ,async (req,res)=>{
 
 })
 
+Router.get('/presance/:id', async (req,res)=>{
+  await db.Presance.findAll({ where :{UserId : req.params.id}}).then((pre)=>{
+    res.send(pre)
+  })
+})
 
 module.exports = Router;
