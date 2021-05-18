@@ -326,5 +326,146 @@ Trim_date.forEach(newdate => {
  })
 
 
+//equipe origin bar
+Router.get('/equipe/origin/bar/:id', async(req,res)=>{
+  var userId=[]
 
+  function onlyUnique(value, index, self) {
+    return self.indexOf(value) === index;
+  }
+
+  var origin = []
+  var Origine_value = []
+  await db.User.findAll({where:{EquipeId:req.params.id}}).then(async(eq)=>{
+    eq.forEach(user => {
+      userId.push(user.id)
+    });
+  await db.Requete.findAll({where:{UserId:userId}}).then(async(reqet)=>{
+   
+    reqet.forEach(ele => {
+
+      origin.push(ele.Origine_de_la_requete)
+    });
+    origin = origin.filter(onlyUnique);
+
+    origin.forEach(ori => {
+      const result = reqet.filter(req => req.Origine_de_la_requete === ori);
+      Origine_value.push(result.length)
+      
+    });
+    res.status(200).json({
+      origin,
+      Origine_value
+    })
+  })
+  })
+ })
+//stat equipe origin 
+Router.get('/comptcli/Line/:id', async(req,res)=>{
+  var userid =[]
+  var users = []
+
+
+  function onlyUnique(value, index, self) {
+      return self.indexOf(value) === index;
+    }
+
+
+  function random_rgba() {
+      var o = Math.round, r = Math.random, s = 255;
+      return 'rgba(' + o(r()*s) + ',' + o(r()*s) + ',' + o(r()*s) + ',' + r().toFixed(1) + ')';
+  }
+
+ const backgroundColor= [
+    'rgb(255, 99, 132)',
+    'rgb(54, 162, 235)',
+    'rgb(255, 205, 86)',
+    'rgb(218, 92, 250)',
+    'rgb(43, 200, 145)',
+    'rgb(244, 56, 56)',
+    'rgb(224, 211, 69)',
+    'rgb(71, 211, 200)',
+    'rgb(234, 143, 46)',
+    'rgb(242, 0, 149)',
+
+  ]
+  
+await db.CompteClient.findOne({ where: {id : req.params.id} , include:[{model : db.Requete},{model : db.Equipe , include : {model :  db.User}}]}).then(async(cl)=>{
+cl.Equipe.Users.forEach(user => {
+      userid.push(user.id)
+    });
+  const Users = await db.User.findAll({where: {id : userid} })
+ var date  = []
+ var requetes =[]
+ var date_value = []
+
+ Users.forEach((user,index) => {
+  var newuser = {
+    id : user.id,
+    label: user.full_name,
+    fill: false,
+    borderColor: backgroundColor[index],
+    data: [],
+    spanGaps: false
+  }
+  users.push(newuser)
+  
+     
+ });
+
+ cl.Requetes.forEach(req => {
+  date.push(req.Heure_douverture.split(" ")[0])
+  requetes.push(req)
+});
+
+var Trim_date = date.filter(onlyUnique);
+
+
+Trim_date.forEach(newdate => {
+  
+  users.forEach(user => {
+    const result = requetes.filter(req => req.Heure_douverture.split(" ")[0] === newdate && req.UserId === user.id);
+    user.data.push(result.length)
+  });
+ 
+});
+ 
+    res.status(200).json({
+      users
+    })
+  })
+
+ })
+// compte cli data 
+ Router.get('/comptcli/origin/bar/:id', async(req,res)=>{
+  
+
+  function onlyUnique(value, index, self) {
+    return self.indexOf(value) === index;
+  }
+
+  var origin = []
+  var Origine_value = []
+  
+  await db.Requete.findAll({where:{CompteClientId:req.params.id}}).then(async(reqet)=>{
+   
+    reqet.forEach(ele => {
+
+      origin.push(ele.Origine_de_la_requete)
+    });
+    origin = origin.filter(onlyUnique);
+
+    origin.forEach(ori => {
+      const result = reqet.filter(req => req.Origine_de_la_requete === ori);
+      Origine_value.push(result.length)
+      
+    });
+    res.status(200).json({
+      origin,
+      Origine_value
+    })
+  })
+  })
+
+  
    module.exports = Router;
