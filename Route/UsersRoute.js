@@ -198,8 +198,9 @@ Router.put('/update/profileimg', upload.single("myImage"), async (req, res) => {
   const { fax } = req.body
   const { website } = req.body
   const { pwd } = req.body
-
+  // user_img_mobile
   const url = `http://${req.hostname}:${process.env.PORT || 3001}/userimg/${req.file.filename}`
+  const mobile = `http://192.168.137.216:${process.env.PORT || 3001}/userimg/${req.file.filename}`
   const path = req.file.path
 
   const user = await db.User.findOne({ where: { id: req.userData.userId } })
@@ -223,6 +224,7 @@ Router.put('/update/profileimg', upload.single("myImage"), async (req, res) => {
   user.fax = fax
   user.Website = website
   user.user_img = url
+  user.user_img_mobile = mobile
   user.img_path = path
   user.user_sex = sex
   user.country = country
@@ -501,6 +503,14 @@ Router.get('/Requete/false/:id' ,async (req,res)=>{
 Router.get('/presance/:id', async (req,res)=>{
   await db.Presance.findAll({ where :{UserId : req.params.id}}).then((pre)=>{
     res.send(pre)
+  })
+})
+
+
+Router.get('/connected/user', async(req,res)=>{
+
+  await db.User.findOne({where : {id: req.userData.userId}}).then((user)=>{
+    res.send(user)
   })
 })
 

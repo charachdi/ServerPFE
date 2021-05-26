@@ -990,5 +990,17 @@ Router.delete('/:id', async (req,res)=>{
 
 
 
+Router.delete('/Requete/:id' , async (req , res)=>{
+
+  await db.Requete.findOne({ where : {id : req.params.id}}).then((reqe =>{
+    reqe.destroy().then(()=>{
+      res.status(200).json({
+      id :  reqe.id
+      })
+    })
+    
+  }))
+})
+
 
 module.exports = Router;
