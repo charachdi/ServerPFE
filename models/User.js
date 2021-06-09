@@ -36,6 +36,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: true,
       },
+      user_img_mobile: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
       user_spec: {
         type: DataTypes.STRING,
         allowNull: true,
@@ -120,6 +124,7 @@ module.exports = (sequelize, DataTypes) => {
       User.hasMany(models.Files)
       User.hasMany(models.Demande ,  { onDelete: 'cascade'})
       User.hasMany(models.Historique ,  { onDelete: 'cascade'})
+      User.hasMany(models.Plan ,  { onDelete: 'cascade'})
       
     };
    

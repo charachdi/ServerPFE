@@ -45,6 +45,8 @@ const ImportRoute = require('./Route/ImportRoute')
 const StatRoute = require('./Route/StatRoute')
 const DemandeRoute = require('./Route/DemandeRoute')
 const AdminRoute = require('./Route/AdminRoute')
+const PlanRoute = require('./Route/PlanRoute')
+
 
 
 app.use('/user',userRouter)
@@ -58,6 +60,7 @@ app.use('/Import',ImportRoute)
 app.use('/stat',StatRoute)
 app.use('/Demande',DemandeRoute)
 app.use('/admin',AdminRoute)
+app.use('/plan',PlanRoute)
 
 
 // connection()

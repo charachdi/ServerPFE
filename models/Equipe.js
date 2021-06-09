@@ -24,6 +24,11 @@ module.exports = (sequelize, DataTypes) => {
         defaultValue: 120,
         allowNull: true
       },
+      requete: {
+        type: DataTypes.INTEGER,
+        defaultValue: 20,
+        allowNull: true
+      },
     });
 
     Equipe.associate = function(models) { 
@@ -31,6 +36,7 @@ module.exports = (sequelize, DataTypes) => {
           allowNull: true
         }})
         Equipe.hasMany(models.CompteClient)
+        Equipe.hasMany(models.Prime)
         Equipe.hasMany(models.Files)
         Equipe.hasOne(models.Archive)
         Equipe.belongsTo(models.Service)

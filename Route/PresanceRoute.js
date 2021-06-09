@@ -19,13 +19,7 @@ Router.get('/user/attend/', async (req , res)=>{
 
     await db.User.findAll({ where : { user_level : ['Collaborateur','Chef equipe']}, include : { model : db.Presance , limit : 1 ,order: [['date','DESC']] , where : { date : new Date().toLocaleDateString("en-US") }}}).then((user)=>{
        
-    //     user.forEach(u => {
-
-    //         if(u.Presances[0].Present){Present++}
-    //         if(u.Presances[0].Absent){Absent++}
-    //         if(u.Presances[0].Conge){Conge++}
-    //         if(u.Presances[0].Retard){Retard++}
-    //    });
+    
 
    
        
@@ -110,6 +104,48 @@ Router.put('/comment/:id', async (req,res)=>{
         }
 
     })
+})
+
+
+Router.post('/attend/bydate', async (req , res)=>{
+    
+    const { datee } = req.body
+    await db.User.findAll({ where : { user_level : ['Collaborateur','Chef equipe']}, include : { model : db.Presance  , where : { date : datee }}}).then((user)=>{
+       
+        res.status(200).json({
+            user,
+        })
+    })
+    
+    
+})
+
+
+
+Router.get('/Service/user/attend/:id', async (req , res)=>{
+
+    var total = 0
+    var Present = 0
+    var Absent = 0
+    var Conge = 0 
+    var Retard = 0
+    const Users = []
+
+    await db.Service.findOne({ where : { id : req.params.id} , include : [{model : db.Equipe , include : [{model : db.User , where : {user_level : ['Collaborateur','Chef equipe']}, include : { model : db.Presance , limit : 1 ,order: [['date','DESC']] , where : { date : new Date().toLocaleDateString("en-US") }}}] }] }).then((resultat)=>{
+      
+        resultat.Equipes.forEach(eq => {
+            eq.Users.forEach(u => {
+                    Users.push(u)
+            });
+            
+        });
+      res.status(200).json({
+         user : Users
+        })
+        
+    })
+    
+   
 })
 
 module.exports = Router;
