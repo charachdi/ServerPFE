@@ -156,6 +156,24 @@ Router.get('/equipe', async(req,res)=>{
     })
    })
    
+Router.put('/equipe/:id', async(req,res)=>{
+    const {Prime} = req.body
+    const {bonus} = req.body
+    const {requete} = req.body
 
+    await db.Equipe.findOne({ wehre : {id : req.params.id}}).then(async(eq)=>{
+        eq.Prime = Prime
+        eq.bonus = bonus
+        eq.requete = requete
+
+        await eq.save().then(async()=>{
+            await db.Equipe.findOne({ wehre : {id : req.params.id}}).then(async(equipe)=>{
+                res.status(200).json({
+                    equipe
+                })
+            })
+        })
+    })
+})
 
 module.exports = Router;

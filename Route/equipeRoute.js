@@ -6,7 +6,9 @@ const { v4: uuidv4 } = require('uuid');
 
 //get all equipes
 Router.get('/', async(req,res)=>{
- const equipe = await db.Equipe.findAll({ include:[{model :  db.User},{model : db.Service},{model : db.CompteClient}] })
+
+const data  = new Date().toLocaleDateString('en-US')
+ const equipe = await db.Equipe.findAll({ include:[{model :  db.User},{model : db.Service},{model : db.Prime , where : {M : data.split('/')[0] , Y : data.split('/')[2] } , include : [{model : db.SPrime , include : [{model : db.User}]}] , limit: 1 }] })
  
 
  res.send(equipe)
@@ -15,7 +17,7 @@ Router.get('/', async(req,res)=>{
 })
 
 
-
+// ,{model : db.CompteClient}
 
 
 
