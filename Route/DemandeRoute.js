@@ -263,6 +263,35 @@ Router.put('/Prime/Approved/:id', async(req,res)=>{
         })
     })
 })
+Router.get('/sprime/:id', async (req,res)=>{
+    await db.SPrime.findAll({ where : {UserId: req.params.id } , include : [{model : db.User}]}).then((prime)=>{
+        res.status(200).json({
+            prime
+        })
+    })
+})
+
+Router.get('/RH/count', async (req,res)=>{
+
+var count = 0
+await db.Demande.findAll({where : {waiting : 1}}).then((dem)=>{
+       
+    dem.forEach(d => {
+        count++
+    });
+ })
+await db.Prime.findAll({where : {waiting : 1}}).then((pri)=>{
+   
+    pri.forEach(p => {
+        count++
+    });
+ })
+
+ 
+ res.status(200).json({
+     count
+ })
+})
 
 
 module.exports = Router;

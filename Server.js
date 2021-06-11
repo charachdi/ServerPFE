@@ -8,8 +8,7 @@ const dotenv = require("dotenv");
 const http = require("http");
 const socketIo = require("socket.io");
 app.use(express.static('uploads/'));
-
-
+const appId = process.env.APPID;
 const {connection} = require('./Socket/socket')
 
 
@@ -19,7 +18,14 @@ app.use(express.json());
 app.use(morgan('dev'))
 dotenv.config();
 app.use(cors())
-db.sequelize.sync()
+
+
+try {
+  db.sequelize.sync();
+} catch (error) {
+  console.log(error)
+}
+
 
 const server = http.createServer(app);
 const io = socketIo(server);
