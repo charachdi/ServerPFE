@@ -9,6 +9,7 @@ const authentification = require('./../midellware/authentification')
 const Mailer = require('./../midellware/Mailer')
 const { promisify } = require('util')
 const fs = require("fs")
+const check = require('./../midellware/Checkdate')
 const unlink = promisify(fs.unlink)
 
 Router.use(authentification)
@@ -514,4 +515,104 @@ Router.get('/connected/user', async(req,res)=>{
   })
 })
 
+/////////////////////////////////////Filter User stat ////////////////
+Router.post('/stat/bar/date/:id' ,async (req,res)=>{
+
+  const Origine = []
+  const origine_value = []
+  var reque = []
+  const {startdate} = req.body
+  const {enddate} = req.body
+
+  // const result = compteClient.Requetes.filter(req => req.UserId === id);
+  function onlyUnique(value, index, self) {
+    return self.indexOf(value) === index;
+  }
+
+
+  await db.User.findOne({ where : { id :req.params.id } , include : [{model : db.Requete}]}).then((user)=>{
+    user.Requetes.forEach(req => {
+      if(check(startdate , enddate , req.Heure_douverture.split(" ")[0])){
+        Origine.push(req.Origine_de_la_requete)
+        reque.push(req)
+      }
+
+      
+     });
+
+     var Trim_Origine = Origine.filter(onlyUnique);
+     Trim_Origine.forEach(orig => {
+      const result = reque.filter(req => req.Origine_de_la_requete === orig);
+      origine_value.push(result.length)
+     });
+
+
+    res.status(200).json({
+      Origine : Trim_Origine , 
+      value : origine_value
+    })
+  })
+})
+
+
+Router.post('/stat/pie/date/:id', async (req, res)=>{
+  const Clients = []
+  const Requetes = []
+  const {startdate} = req.body
+  const {enddate} = req.body
+
+    await db.User.findOne({ where : { id :req.params.id } , include : [{model : db.Equipe , include: [{model :db.CompteClient , where : { Archive : 0} , include : [{model : db.Requete , where : { UserId : req.params.id}}]}]}]}).then((user)=>{
+     
+      user.Equipe.CompteClients.forEach(cli => {
+        var reqcount = 0
+       Clients.push(cli.Nom_compteCli)
+        cli.Requetes.forEach(req => {
+          if(check(startdate , enddate , req.Heure_douverture.split(" ")[0])){
+            reqcount++
+       }
+      });
+       Requetes.push(reqcount)
+     });
+     
+     
+      res.status(200).json({
+       client :  Clients.slice(0, 5),
+       value : Requetes.slice(0, 5)
+      })
+    })
+})
+
+Router.post('/stat/line/date/:id', async (req, res)=>{
+
+  function onlyUnique(value, index, self) {
+    return self.indexOf(value) === index;
+  }
+  var date  = []
+  var date_value = []
+  var reque = []
+  const {startdate} = req.body
+  const {enddate} = req.body
+
+  await db.Requete.findAll({where : { UserId : req.params.id}}).then((reqs)=>{
+    
+   
+    reqs.forEach(req => {
+      if(check(startdate , enddate , req.Heure_douverture.split(" ")[0])){
+        date.push(req.Heure_douverture.split(" ")[0])
+        reque.push(req)
+      }
+  });
+
+    var Trim_date = date.filter(onlyUnique);
+    Trim_date.forEach(newdate => {
+      const result = reque.filter(req => req.Heure_douverture.split(" ")[0] === newdate);
+      date_value.push(result.length)
+  });
+     
+    res.status(200).json({
+      date : Trim_date,
+      value : date_value
+    })
+  })
+})
 module.exports = Router;

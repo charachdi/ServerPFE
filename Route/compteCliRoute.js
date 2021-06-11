@@ -56,7 +56,7 @@ Router.get('/requete/:id',async (req,res)=>{
 //get all Historique of one client
 Router.get('/Historique/:id',async (req,res)=>{
 
-  const compteCli = await db.CompteClient.findOne({ where : {id : req.params.id } , include:[{model : db.Historique , include:[{model : db.User},{model : db.Requete , include:[{model : db.Modirequete}]}]}] })
+  const compteCli = await db.CompteClient.findOne({ where : {id : req.params.id } , include:[{model : db.Historique , include:[{model : db.User},{model : db.Requete , include:[{model : db.Modirequete , include : [{model : db.User}]}]}]}] })
   if (!compteCli) res.status(201).json({
     message : "compte client not found"
   }) 

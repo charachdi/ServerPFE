@@ -39,14 +39,11 @@ Router.put('/:id', async (req, res)=>{
     const  {Present} = req.body
     const  {Absent} = req.body
     const  {Retard} = req.body
+    const {UserId} = req.body
     // const  Conge = req.body
     const  Comment = ""
 
-    
-
-            await db.User.findOne({ where : { id : req.params.id}}).then( async (user)=>{
-
-                    await db.Presance.findOne({ where : {UserId : user.id , date : new Date().toLocaleDateString("en-US")}}).then( async (pres)=>{
+                    await db.Presance.findOne({ where : {id : req.params.id , date : new Date().toLocaleDateString("en-US")}}).then( async (pres)=>{
                         if(pres){
                             pres.Present = Present
                             pres.Absent = Absent
@@ -72,7 +69,7 @@ Router.put('/:id', async (req, res)=>{
                                 Conge : false ,
                                 date : new Date().toLocaleDateString("en-US"),
                                 Comment : Comment,
-                                UserId : user.id,
+                                UserId : UserId,
                             }
 
                             await db.Presance.create(Presance).then(result =>{
@@ -84,7 +81,7 @@ Router.put('/:id', async (req, res)=>{
                     })
                     
 
-            })
+            
 })
 
 
@@ -120,6 +117,13 @@ Router.post('/attend/bydate', async (req , res)=>{
     
 })
 
+
+Router.get('/Pre/:id', async (req,res)=>{
+    await db.Presance.findOne({where : { id : req.params.id}}).then((pres)=>{
+        res.send(pres)
+    })
+    
+})
 
 
 Router.get('/Service/user/attend/:id', async (req , res)=>{

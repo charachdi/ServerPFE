@@ -122,7 +122,8 @@ Router.get('/line/:id', async(req,res)=>{
        });
        
    });
-var Trim_date = date.filter(onlyUnique);
+var Trim = date.filter(onlyUnique);
+var Trim_date = Trim.slice().sort((a, b) =>  new Date(a) - new Date(b))
 Trim_date.forEach(newdate => {
     const result = requetes.filter(req => req.Heure_douverture.split(" ")[0] === newdate);
     date_value.push(result.length)
