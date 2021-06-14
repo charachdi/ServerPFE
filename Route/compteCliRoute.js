@@ -56,7 +56,7 @@ Router.get('/requete/:id',async (req,res)=>{
 //get all Historique of one client
 Router.get('/Historique/:id',async (req,res)=>{
 
-  const compteCli = await db.CompteClient.findOne({ where : {id : req.params.id } , include:[{model : db.Historique , include:[{model : db.User},{model : db.Requete , include:[{model : db.Modirequete , include : [{model : db.User}]}]}]}] })
+  const compteCli = await db.CompteClient.findOne({ where : {id : req.params.id } , include:[{model : db.Historique , include:[{model : db.User},{model : db.Requete },{model : db.Before},{model : db.After}]}] })
   if (!compteCli) res.status(201).json({
     message : "compte client not found"
   }) 
@@ -80,79 +80,78 @@ Router.get('/requete/collab/:id',async (req,res)=>{
 })
 
   //update comptecli requete
-  Router.put('/requete/:id', async (req,res)=>{
-
-  
+Router.put('/requete/:id', async (req,res)=>{
 
     await db.Requete.findOne({ where : {id : req.params.id } , include:[{model : db.Modirequete},{model : db.User},{model : db.CompteClient , include : [{model : db.Service}]}] }).then(async (requete)=>{
       if(!requete) res.status(201).json({
         message : 'requete not found'
       })
-
-      if(requete.Modirequete){
-
-        await db.Modirequete.findOne({where : {RequeteId : requete.id}}).then((modif)=>{
-
-          modif.Proprietaire_de_la_requete = requete.Proprietaire_de_la_requete,
-          modif.Statut =  requete.Statut,
-          modif.Origine_de_la_requete =  requete.Origine_de_la_requete,
-          modif.Heure_douverture =  requete.Heure_douverture,
-          modif.Heure_de_fermeture =  requete.Heure_de_fermeture,
-          modif.Objet =  requete.Objet,
-          modif.Numero_de_la_requete =  requete.Numero_de_la_requete,
-          modif.Motifs_de_resiliation =  requete.Motifs_de_resiliation,
-          modif.date_ouverture =  requete.date_ouverture,
-          modif.date_de_fermeture =  requete.date_de_fermeture,
-          modif.Famille_de_demande_RC =  requete.Famille_de_demande_RC,
-          modif.Type_de_la_demande_RC =  requete.Type_de_la_demande_RC,
-          modif.Raison_sociale_du_compte =  requete.Raison_sociale_du_compte,
-          modif.Anciennete =  requete.Anciennete
-        })
-
-      }else{
-        await db.Modirequete.create({
-                Proprietaire_de_la_requete: requete.Proprietaire_de_la_requete,
-                Statut:  requete.Statut,
-                Origine_de_la_requete:  requete.Origine_de_la_requete,
-                Heure_douverture:  requete.Heure_douverture,
-                Heure_de_fermeture:  requete.Heure_de_fermeture,
-                Objet:  requete.Objet,
-                Numero_de_la_requete:  requete.Numero_de_la_requete,
-                Motifs_de_resiliation:  requete.Motifs_de_resiliation,
-                date_ouverture:  requete.date_ouverture,
-                date_de_fermeture:  requete.date_de_fermeture,
-                Famille_de_demande_RC:  requete.Famille_de_demande_RC,
-                Type_de_la_demande_RC:  requete.Type_de_la_demande_RC,
-                Raison_sociale_du_compte:  requete.Raison_sociale_du_compte,
-                Anciennete:  requete.Anciennete,
-                CompteClientId: 5,
-                FileId: requete.FileId,
-                UserId:  req.userData.userId,
-                RequeteId : requete.id
-        })
-      }
-      requete.Statut = req.body.Statut
-      requete.Origine_de_la_requete = req.body.Origine_de_la_requete
-      requete.Motifs_de_resiliation = req.body.Motifs_de_resiliation
-      requete.Heure_de_fermeture = req.body.Heure_de_fermeture
-      requete.Famille_de_demande_RC = req.body.Famille_de_demande_RC
-
-      await requete.save().then( async (updatedreq)=>{
-       const His = {
-        CompteClientId :updatedreq.CompteClientId, 
+      const his = {
+        CompteClientId :requete.CompteClientId,
         UserId : req.userData.userId,
-        RequeteId	: updatedreq.id,
-       }
-       await db.Historique.create(His)
-       AdminNotif(updatedreq , updatedreq.CompteClient.Service.Roomid)
-        res.status(200).json({
-          requete :updatedreq
-        })
-       
+        RequeteId :requete.id,
+      }
+      await db.Historique.create(his).then(async(savedhis)=>{
+        const Before = {
+          Proprietaire_de_la_requete : requete.Proprietaire_de_la_requete,
+          Statut :  requete.Statut,
+          Origine_de_la_requete :  requete.Origine_de_la_requete,
+          Heure_douverture :  requete.Heure_douverture,
+          Heure_de_fermeture :  requete.Heure_de_fermeture,
+          Objet :  requete.Objet,
+          Numero_de_la_requete :  requete.Numero_de_la_requete,
+          Motifs_de_resiliation :  requete.Motifs_de_resiliation,
+          date_ouverture :  requete.date_ouverture,
+          date_de_fermeture :  requete.date_de_fermeture,
+          Famille_de_demande_RC :  requete.Famille_de_demande_RC,
+          Type_de_la_demande_RC :  requete.Type_de_la_demande_RC,
+          Raison_sociale_du_compte :  requete.Raison_sociale_du_compte,
+          Anciennete :  requete.Anciennete,
+          RequeteId : requete.id,
+          CompteClientId : requete.CompteClientId,
+          HistoriqueId : savedhis.id
+           }
+ 
+           const after = {
+             Proprietaire_de_la_requete : requete.Proprietaire_de_la_requete,
+             Statut :  req.body.Statut,
+             Origine_de_la_requete :  req.body.Origine_de_la_requete,
+             Heure_douverture :  requete.Heure_douverture,
+             Heure_de_fermeture :  req.body.Heure_de_fermeture,
+             Objet :  requete.Objet,
+             Numero_de_la_requete :  requete.Numero_de_la_requete,
+             Motifs_de_resiliation :  req.body.Motifs_de_resiliation,
+             date_ouverture :  requete.date_ouverture,
+             date_de_fermeture :  requete.date_de_fermeture,
+             Famille_de_demande_RC :  req.body.Famille_de_demande_RC,
+             Type_de_la_demande_RC :  requete.Type_de_la_demande_RC,
+             Raison_sociale_du_compte :  requete.Raison_sociale_du_compte,
+             Anciennete :  requete.Anciennete,
+             RequeteId : requete.id,
+             CompteClientId : requete.CompteClientId,
+             HistoriqueId : savedhis.id
+           }
+
+           await db.Before.create(Before)
+           await db.After.create(after)
+           requete.Statut = req.body.Statut
+           requete.Motifs_de_resiliation = req.body.Motifs_de_resiliation
+           requete.Heure_de_fermeture = req.body.Heure_de_fermeture
+           requete.Famille_de_demande_RC = req.body.Famille_de_demande_RC
+           requete.Origine_de_la_requete = req.body.Origine_de_la_requete
+           await  requete.save().then((saved)=>{
+            res.status(200).json({
+              requete : saved
+             })
+           })
+          
       })
-    
+         
+         
+
       
-    })
+        })
+
     
     })
 
