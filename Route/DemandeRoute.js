@@ -151,7 +151,7 @@ Router.get('/equipe/prime/:id' , async (req , res)=>{
    await db.Equipe.findOne({ where :{ id : req.params.id} , include : [{model : db.User , include : [{model : db.Presance},]}, {model : db.Prime , include : [{model : db.SPrime , include : db.User}]}]}).then((eq)=>{
      
 
-       if(eq.Primes.length === 0){
+     
         eq.Users.forEach(u => {
             const demande = {
                 Bonus: eq.bonus,
@@ -169,11 +169,7 @@ Router.get('/equipe/prime/:id' , async (req , res)=>{
         res.status(200).json({
             demandes
           })
-       }else{
-        res.status(200).json({
-            demandes : eq.Primes
-          })
-       }
+       
         
     
    
@@ -182,7 +178,7 @@ Router.get('/equipe/prime/:id' , async (req , res)=>{
 
 })
 
-Router.post('/equipe/prime' , async (req , res)=>{
+Router.post('/equipe/prime/:id' , async (req , res)=>{
 
 
 const {Prime} = req.body
@@ -195,6 +191,10 @@ const  NewPrime = {
 }
 
 const SP = []
+
+await db.Prime.findOne({where : { EquipeId : req.params.id}}).then((pr)=>{
+  if(pr)   pr.destroy()
+})
 
 await db.Prime.create(NewPrime).then(async(pr)=>{
     Sprime.forEach(async(S) =>{
