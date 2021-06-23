@@ -505,6 +505,7 @@ Router.post('/equipe/origin/bar/date/:id', async(req,res)=>{
   function onlyUnique(value, index, self) {
     return self.indexOf(value) === index;
   }
+  
   var filtredreq = []
   var origin = []
   var Origine_value = []

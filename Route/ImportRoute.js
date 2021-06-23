@@ -26,6 +26,9 @@ Router.post("/csv", upload.single("csv"), async (req,res)=>{
     const url = `http://${req.hostname}:${process.env.PORT || 3001}/csv/${req.file.filename}`
     const path = req.file.path
 
+    //array[req,req,req]
+
+    
     const Cleanfile = excelToJson({
         sourceFile: path,
         

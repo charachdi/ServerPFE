@@ -18,11 +18,7 @@ Router.get('/user/attend/', async (req , res)=>{
 
 
     await db.User.findAll({ where : { user_level : ['Collaborateur','Chef equipe']}, include : { model : db.Presance , limit : 1 ,order: [['date','DESC']] , where : { date : new Date().toLocaleDateString("en-US") }}}).then((user)=>{
-       
-    
 
-   
-       
         res.status(200).json({
             user,
             Present,
@@ -105,19 +101,13 @@ Router.put('/comment/:id', async (req,res)=>{
 
 
 Router.post('/attend/bydate', async (req , res)=>{
-    
     const { datee } = req.body
     await db.User.findAll({ where : { user_level : ['Collaborateur','Chef equipe']}, include : { model : db.Presance  , where : { date : datee }}}).then((user)=>{
-       
         res.status(200).json({
             user,
         })
     })
-    
-    
 })
-
-
 Router.get('/Pre/:id', async (req,res)=>{
     await db.Presance.findOne({where : { id : req.params.id}}).then((pres)=>{
         res.send(pres)
