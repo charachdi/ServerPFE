@@ -239,13 +239,25 @@ Router.put('/Requete/update/false',async(req,res)=>{
             reque.Origine_de_la_requete = Origine_de_la_requete
             reque.Raison_sociale_du_compte = cli.Nom_compteCli
             reque.Type_de_la_demande_RC = Type_de_la_demande_RC
-            reque.Check = 1
-            await reque.save().then( async ()=>{
-              await db.Requete.findOne({ where : { id: id}}).then( async (updatedreq)=>{
-                res.status(200).json({
-                  updatedreq
+            if(Statut !== "" && Origine_de_la_requete !== "" && Comptecli !== ""){
+              reque.Check = 1
+            }
+           
+            await reque.save().then( async (result)=>{
+              if(result.Check === 1){
+                await db.Requete.findOne({ where : { id: id}}).then( async (updatedreq)=>{
+                  res.status(200).json({
+                    updatedreq
+                  })
                 })
-              })
+              }else {
+                await db.Requete.findOne({ where : { id: id} , include : [{model : db.User}]}).then( async (updatedreq)=>{
+                  res.status(201).json({
+                    updatedreq
+                  })
+                })
+              }
+              
 
             })
           }else{
@@ -320,7 +332,7 @@ Router.put('/Requete/update/false',async(req,res)=>{
     
     
       }else{
-        res.status(201).json({
+        res.status(202).json({
           message : "error"
         })
       }

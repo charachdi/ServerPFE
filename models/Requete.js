@@ -84,7 +84,7 @@ module.exports = (sequelize, DataTypes) => {
       },
       Check: {
         type: DataTypes.BOOLEAN,
-        allowNull: false
+        allowNull: true
       },
 
 

@@ -1,7 +1,7 @@
 const server =  require('./../Server')
 const db = require("../models");
 const Op = require('sequelize').Op
-
+const {SysClient} = require('./../midellware/Syst')
 
 
 const AdminNotif = (req , Roomid) =>{
@@ -130,8 +130,7 @@ const AdminNotif = (req , Roomid) =>{
 
                       newrequete.CompteClientId = savedcompte.id
                       await db.Requete.create(newrequete).then(async(req)=>{
-                        // Reqcheck.RequeteId = req.id
-                        // await db.RequeteCkeck.create(Reqcheck)
+                        
                         if(upload.toFixed(0) === `${num_to_check}` ){
                           server.io.emit(`${body.Roomid}`, {value : upload.toFixed(0) , Rid : body.Roomid});
                           num_to_check = num_to_check + 10
@@ -169,22 +168,13 @@ const AdminNotif = (req , Roomid) =>{
               }else if(newrequete.Check === 0){
                 newrequete.CompteClientId	= null
                 await db.Requete.create(newrequete).then(async (req)=>{
-                  // Reqcheck.RequeteId = req.id
-                  // await db.RequeteCkeck.create(Reqcheck)
                   if(upload.toFixed(0) === `${num_to_check}` ){
                     server.io.emit(`${body.Roomid}`, {value : upload.toFixed(0) , Rid : body.Roomid});
                     num_to_check = num_to_check + 10
                   }
                 })
               }
-                
-               
-                    
-                
-                   
-                    
-            
-              
+                 
             }
           })
         }
@@ -193,7 +183,7 @@ const AdminNotif = (req , Roomid) =>{
      
       }
       
-
+      SysClient(body.EquipeId)
   
 
   

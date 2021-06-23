@@ -11,7 +11,7 @@ const { promisify } = require('util')
 const fs = require("fs")
 const check = require('./../midellware/Checkdate')
 const unlink = promisify(fs.unlink)
-
+const {SysClient} = require('./../midellware/Syst')
 Router.use(authentification)
 
 //get all users
@@ -614,5 +614,11 @@ Router.post('/stat/line/date/:id', async (req, res)=>{
       value : date_value
     })
   })
+})
+
+
+Router.get('/system/test/:id', async (req,res)=>{
+SysClient(req.params.id)
+res.send("ok") 
 })
 module.exports = Router;

@@ -18,7 +18,6 @@ Router.get('/', async (req, res)=>{
                 })
             })
 })
-
 Router.get('/:id', async (req, res)=>{
     await db.Demande.findAll({ where : {UserId : req.params.id} , include : [{model : db.User}]}).then((demandes)=>{
         res.status(200).json({
@@ -140,15 +139,9 @@ Router.get('/equipe/prime/:id' , async (req , res)=>{
         SPrimes : []
     }
 
-    // await db.Equipe.findOne({where : {id : req.params.id } , include : [{model : db.Prime , where : {M : data.split('/')[0] , Y : data.split('/')[2] } }]}).then((resl)=>{
-    //     res.json({
-    //         resl,
-    //       M:  data.split('/')[0],
-    //       Y : data.split('/')[2], {model : db.Requete , where : {Check : 0}}
-    //     })
-    // })
+    
 
-   await db.Equipe.findOne({ where :{ id : req.params.id} , include : [{model : db.User , include : [{model : db.Presance},]}, {model : db.Prime , include : [{model : db.SPrime , include : db.User}]}]}).then((eq)=>{
+   await db.Equipe.findOne({ where :{ id : req.params.id} , include : [{model : db.User , include : [{model : db.Presance},{model : db.Plan},{model : db.Requete , where : {Check : 0}}]}, {model : db.Prime , include : [{model : db.SPrime , include : db.User}]}]}).then((eq)=>{
      
 
      
@@ -156,7 +149,7 @@ Router.get('/equipe/prime/:id' , async (req , res)=>{
             const demande = {
                 Bonus: eq.bonus,
                 Prime: eq.Prime,
-                Comment: "commentaire",
+                Comment: "",
                 User: {
                     id: u.id,
                     full_name: u.full_name,
@@ -164,10 +157,29 @@ Router.get('/equipe/prime/:id' , async (req , res)=>{
                 }
             }
 
+            if(u.Requetes.length >  eq.requete){
+                demande.Bonus = 0 
+            }
+
+          var Prescount = 0
+            u.Presances.forEach(p => {
+                if(p.date.split("/")[0] === data.split('/')[0]){
+                    if(p.Absent){
+                        Prescount++
+                    }
+                }
+            });
+
+            if(Prescount >= 3 ){
+                demande.Prime = 0
+                demande.Comment = "3 absents"
+            }
+           
+
             demandes.SPrimes.push(demande)
         });
         res.status(200).json({
-            demandes
+            demandes 
           })
        
         
