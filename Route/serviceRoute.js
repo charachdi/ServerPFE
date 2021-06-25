@@ -5,7 +5,7 @@ const { v4: uuidv4 } = require('uuid');
 
 //get all service
 Router.get("/", async (req, res) => {
-  const service = await db.Service.findAll({ include: [{ model: db.Equipe }] });
+  const service = await db.Service.findAll({ include: [{ model: db.Equipe , include : [{model : db.Prime}] }] });
   console.log(service);
   res.send(service);
 });
@@ -14,7 +14,7 @@ Router.get("/", async (req, res) => {
 Router.get("/:id", async (req, res) => {
   const service = await db.Service.findOne({
     where: { id: req.params.id },
-    include: [{ model: db.Equipe }],
+    include: [{ model: db.Equipe , include : [{model : db.Prime}]}],
   });
   if (!service)
     res.status(201).json({
@@ -30,9 +30,12 @@ Router.get("/:id", async (req, res) => {
 // , where : {user_level : ["Chef equipe","Collaborateur"]}
 //get one service for home page
 Router.get("/dataservice/:id", async (req, res) => {
+
+  const data  = new Date().toLocaleDateString('en-US')
+
   const service = await db.Service.findOne({
     where: { id: req.params.id },
-    include: [{ model: db.Equipe , include :[{model :db.User , include :{model : db.Equipe , include : [{model : db.Service}]}} , {model : db.Service},{model : db.CompteClient , include:[{model : db.Clientimg}, {model : db.Theme},{model : db.Service},{model : db.Equipe}]}]}],
+    include: [{ model: db.Equipe , include :[{model :db.User , include :{model : db.Equipe , include : [{model : db.Service}]}} ,{model : db.Prime , where : {M : data.split('/')[0] , Y : data.split('/')[2] } , include : [{model : db.SPrime , include : [{model : db.User}]}] , limit: 1 },{model : db.Service},{model : db.CompteClient , include:[{model : db.Clientimg}, {model : db.Theme},{model : db.Service},{model : db.Equipe}]}]}],
   });
   if (!service)
     res.status(201).json({
@@ -72,9 +75,11 @@ Router.get("/dataservice/:id", async (req, res) => {
 
 
 Router.get("/dataservice/equipe/:id", async (req, res) => {
+  const data  = new Date().toLocaleDateString('en-US')
+
   const service = await db.Service.findOne({
     where: { id: req.params.id },
-    include: [{ model: db.Equipe , include : [{model : db.Service}]}],
+    include: [{ model: db.Equipe , include : [{model : db.Service},{model : db.Prime , where : {M : data.split('/')[0] , Y : data.split('/')[2] } , include : [{model : db.SPrime , include : [{model : db.User}]}] , limit: 1 }]}],
   });
   if (!service)
     res.status(201).json({
