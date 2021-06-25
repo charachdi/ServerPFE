@@ -16,11 +16,6 @@ const data  = new Date().toLocaleDateString('en-US')
 
 })
 
-
-// ,{model : db.CompteClient}
-
-
-
 //get one equipe by id
 Router.get('/:id',async (req,res)=>{
 
@@ -54,7 +49,6 @@ Router.get('/:id',async (req,res)=>{
   })
 })
 
-
 //get one equipe by id
 Router.get('/compte/:id',async (req,res)=>{
 
@@ -86,7 +80,6 @@ Router.get('/compte/:id',async (req,res)=>{
 
 })
 
-
 // add equipe
 Router.post('/',async (req,res)=>{
 
@@ -111,7 +104,7 @@ Router.post('/',async (req,res)=>{
 
       const newequipe =   await  db.Equipe.create(NewEquipe)
       .then(async(eq)=>{
-        const equipe = await db.Equipe.findOne({ where: {id : eq.id} , include:[{model :  db.User},{model : db.Service}] });
+        const equipe = await db.Equipe.findOne({ where: {id : eq.id} , include:[{model :  db.User},{model : db.Service},{model : db.Prime}] });
         db.Archive.create({
           EquipeId : equipe.id
         })
@@ -127,7 +120,6 @@ Router.post('/',async (req,res)=>{
   
     
 })
-
 
 //update equipe
 Router.put('/update/equipe/:id', async (req,res)=>{
@@ -150,15 +142,14 @@ Router.put('/update/equipe/:id', async (req,res)=>{
 
    await equipe.save()
    .then(async()=>{
-    const equipe = await db.Equipe.findOne({ where : {id : req.params.id} ,include:[{model :  db.User},{model : db.Service}]})
+    const equipe = await db.Equipe.findOne({ where : {id : req.params.id} ,include:[{model :  db.User},{model : db.Service},{model : db.Prime}]})
     res.status(200).json({
       message :' equipe updated',
       equipe
     })
    })
   
-  })
-
+})
 
 //update equipe setting
 Router.put('/setting/:id', async (req,res)=>{
@@ -185,10 +176,6 @@ Router.put('/setting/:id', async (req,res)=>{
   
   
 })
-
-
-
-
 
 //delete equipe
 Router.delete('/:id', async (req,res)=>{

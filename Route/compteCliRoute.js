@@ -155,7 +155,7 @@ Router.put('/requete/:id', async (req,res)=>{
     
     })
 
-    Router.post('/add/requete' , async (req,res)=>{
+Router.post('/add/requete' , async (req,res)=>{
 
 
       await db.Requete.create(req.body).then( async (reqe)=>{
@@ -167,7 +167,7 @@ Router.put('/requete/:id', async (req,res)=>{
         
       })
       
-    })
+})
 
 
 //update comptecli archive
